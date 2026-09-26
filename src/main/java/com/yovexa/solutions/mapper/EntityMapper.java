@@ -9,6 +9,8 @@ import com.yovexa.solutions.dto.hero.HeroRequest;
 import com.yovexa.solutions.dto.hero.HeroResponse;
 import com.yovexa.solutions.dto.inquiry.ContactInquiryRequest;
 import com.yovexa.solutions.dto.inquiry.ContactInquiryResponse;
+import com.yovexa.solutions.dto.casestudy.CaseStudyRequest;
+import com.yovexa.solutions.dto.casestudy.CaseStudyResponse;
 import com.yovexa.solutions.dto.project.ProjectRequest;
 import com.yovexa.solutions.dto.project.ProjectResponse;
 import com.yovexa.solutions.dto.service.ServiceRequest;
@@ -221,26 +223,46 @@ public class EntityMapper {
     public ProjectResponse toProjectResponse(Project project) {
         if (project == null)
             return null;
+        String name = project.getName() != null && !project.getName().trim().isEmpty()
+                ? project.getName()
+                : project.getTitle();
+        String summary = project.getShortDescription() != null && !project.getShortDescription().trim().isEmpty()
+                ? project.getShortDescription()
+                : (project.getDescription() != null && project.getDescription().length() > 160
+                    ? project.getDescription().substring(0, 157) + "..."
+                    : project.getDescription());
+        String img = project.getFeaturedImage() != null && !project.getFeaturedImage().trim().isEmpty()
+                ? project.getFeaturedImage()
+                : project.getImage();
+        String live = project.getProjectUrl() != null && !project.getProjectUrl().trim().isEmpty()
+                ? project.getProjectUrl()
+                : project.getLiveUrl();
+
         return ProjectResponse.builder()
                 .id(project.getId())
-                .name(project.getName())
-                .title(project.getName())
-                .projectName(project.getName())
+                .name(name)
+                .title(name)
+                .projectName(name)
                 .slug(project.getSlug())
-                .shortDescription(project.getShortDescription())
-                .summary(project.getShortDescription())
+                .subtitle(project.getSubtitle())
+                .clientLabel(project.getClientLabel())
+                .shortDescription(summary)
+                .summary(summary)
                 .description(project.getDescription())
                 .fullDescription(project.getDescription())
                 .solution(project.getDescription())
                 .category(project.getCategory())
-                .projectType(project.getProjectType())
-                .featuredImage(project.getFeaturedImage())
-                .galleryImages(project.getGalleryImages() != null ? project.getGalleryImages() : new ArrayList<>())
+                .projectType(project.getProjectType() != null ? project.getProjectType() : project.getCategory())
+                .featuredImage(img)
+                .image(img)
+                .thumbnailUrl(img)
+                .features(project.getFeatures() != null ? project.getFeatures() : new ArrayList<>())
                 .technologies(project.getTechnologies() != null ? project.getTechnologies() : new ArrayList<>())
-                .projectUrl(project.getProjectUrl())
+                .projectUrl(live)
+                .liveUrl(live)
                 .githubUrl(project.getGithubUrl())
                 .caseStudyUrl(project.getCaseStudyUrl())
-                .status(project.getStatus())
+                .status(project.getStatus() != null ? project.getStatus() : "PUBLISHED")
                 .featured(project.isFeatured())
                 .displayOrder(project.getDisplayOrder())
                 .seoTitle(project.getSeoTitle())
@@ -257,20 +279,32 @@ public class EntityMapper {
                 ? SlugUtils.toSlug(request.getSlug())
                 : SlugUtils.toSlug(request.getName());
 
+        String name = request.getName();
+        String img = request.getFeaturedImage();
+        String url = request.getProjectUrl();
+        String desc = (request.getDescription() != null && !request.getDescription().trim().isEmpty())
+                ? request.getDescription()
+                : request.getShortDescription();
+
         return Project.builder()
-                .name(request.getName())
+                .name(name)
+                .title(name)
                 .slug(slug)
+                .subtitle(request.getSubtitle())
+                .clientLabel(request.getClientLabel())
                 .shortDescription(request.getShortDescription())
-                .description(request.getDescription())
+                .description(desc)
                 .category(request.getCategory() != null ? request.getCategory().toUpperCase() : "WEB_APPLICATIONS")
                 .projectType(request.getProjectType())
-                .featuredImage(request.getFeaturedImage())
-                .galleryImages(request.getGalleryImages() != null ? request.getGalleryImages() : new ArrayList<>())
+                .featuredImage(img)
+                .image(img)
+                .features(request.getFeatures() != null ? request.getFeatures() : new ArrayList<>())
                 .technologies(request.getTechnologies() != null ? request.getTechnologies() : new ArrayList<>())
-                .projectUrl(request.getProjectUrl())
+                .projectUrl(url)
+                .liveUrl(url)
                 .githubUrl(request.getGithubUrl())
                 .caseStudyUrl(request.getCaseStudyUrl())
-                .status(request.getStatus() != null ? request.getStatus().toUpperCase() : "DRAFT")
+                .status(request.getStatus() != null ? request.getStatus().toUpperCase() : "PUBLISHED")
                 .featured(request.getFeatured() != null && request.getFeatured())
                 .displayOrder(request.getDisplayOrder())
                 .seoTitle(request.getSeoTitle())
@@ -382,6 +416,7 @@ public class EntityMapper {
                 .linkedin(settings.getLinkedin())
                 .github(settings.getGithub())
                 .instagram(settings.getInstagram())
+                .facebook(settings.getFacebook())
                 .updatedAt(settings.getUpdatedAt())
                 .build();
     }
@@ -411,5 +446,67 @@ public class EntityMapper {
             entity.setGithub(request.getGithub());
         if (request.getInstagram() != null)
             entity.setInstagram(request.getInstagram());
+        if (request.getFacebook() != null)
+            entity.setFacebook(request.getFacebook());
+    }
+
+    // CASE STUDY
+    public CaseStudyResponse toCaseStudyResponse(CaseStudy caseStudy) {
+        if (caseStudy == null)
+            return null;
+        return CaseStudyResponse.builder()
+                .id(caseStudy.getId())
+                .title(caseStudy.getTitle())
+                .slug(caseStudy.getSlug())
+                .subtitle(caseStudy.getSubtitle())
+                .projectReference(caseStudy.getProjectReference())
+                .category(caseStudy.getCategory())
+                .clientLabel(caseStudy.getClientLabel())
+                .summary(caseStudy.getSummary())
+                .problem(caseStudy.getProblem())
+                .solution(caseStudy.getSolution())
+                .features(caseStudy.getFeatures() != null ? caseStudy.getFeatures() : new ArrayList<>())
+                .technologies(caseStudy.getTechnologies() != null ? caseStudy.getTechnologies() : new ArrayList<>())
+                .featuredImage(caseStudy.getFeaturedImage())
+                .liveUrl(caseStudy.getLiveUrl())
+                .githubUrl(caseStudy.getGithubUrl())
+                .status(caseStudy.getStatus() != null ? caseStudy.getStatus() : "PUBLISHED")
+                .featured(caseStudy.isFeatured())
+                .displayOrder(caseStudy.getDisplayOrder())
+                .seoTitle(caseStudy.getSeoTitle())
+                .seoDescription(caseStudy.getSeoDescription())
+                .createdAt(caseStudy.getCreatedAt())
+                .updatedAt(caseStudy.getUpdatedAt())
+                .build();
+    }
+
+    public CaseStudy toCaseStudy(CaseStudyRequest request) {
+        if (request == null)
+            return null;
+        String slug = (request.getSlug() != null && !request.getSlug().trim().isEmpty())
+                ? SlugUtils.toSlug(request.getSlug())
+                : SlugUtils.toSlug(request.getTitle());
+
+        return CaseStudy.builder()
+                .title(request.getTitle())
+                .slug(slug)
+                .subtitle(request.getSubtitle())
+                .projectReference(request.getProjectReference())
+                .category(request.getCategory() != null ? request.getCategory().toUpperCase() : "WEB_APPLICATIONS")
+                .clientLabel(request.getClientLabel())
+                .summary(request.getSummary())
+                .problem(request.getProblem())
+                .solution(request.getSolution())
+                .features(request.getFeatures() != null ? request.getFeatures() : new ArrayList<>())
+                .technologies(request.getTechnologies() != null ? request.getTechnologies() : new ArrayList<>())
+                .featuredImage(request.getFeaturedImage())
+                .liveUrl(request.getLiveUrl())
+                .githubUrl(request.getGithubUrl())
+                .status(request.getStatus() != null ? request.getStatus().toUpperCase() : "PUBLISHED")
+                .featured(request.getFeatured() != null && request.getFeatured())
+                .displayOrder(request.getDisplayOrder())
+                .seoTitle(request.getSeoTitle())
+                .seoDescription(request.getSeoDescription())
+                .build();
     }
 }

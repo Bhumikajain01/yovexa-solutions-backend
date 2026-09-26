@@ -9,6 +9,7 @@ import com.yovexa.solutions.model.Service;
 import com.yovexa.solutions.repository.ServiceRepository;
 import com.yovexa.solutions.service.ServicesService;
 import com.yovexa.solutions.util.SlugUtils;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -20,8 +21,98 @@ public class ServicesServiceImpl implements ServicesService {
     private final ServiceRepository serviceRepository;
     private final EntityMapper mapper;
 
+    @PostConstruct
+    public void initDefaultServices() {
+        if (serviceRepository.count() == 0) {
+            List<Service> defaultServices = List.of(
+                Service.builder()
+                    .title("Website Development")
+                    .slug("website-development")
+                    .shortDescription("Modern, responsive websites designed to showcase your business, attract customers, and create a strong digital presence.")
+                    .description("Custom business websites, landing pages, company websites, portfolio websites, and responsive web interfaces.")
+                    .icon("Globe")
+                    .popularTag("Business Essential")
+                    .features(List.of(
+                        "Responsive business websites",
+                        "Modern UI/UX implementation",
+                        "React.js & modern frontend development",
+                        "SEO-friendly architecture",
+                        "API & third-party integrations"
+                    ))
+                    .displayOrder(1)
+                    .isActive(true)
+                    .build(),
+                Service.builder()
+                    .title("App Development")
+                    .slug("app-development")
+                    .shortDescription("Scalable mobile applications built around your business requirements, user workflows, and product goals.")
+                    .description("Custom mobile applications, business apps, customer-facing apps, dashboards, and API-connected application experiences.")
+                    .icon("Smartphone")
+                    .popularTag("Mobile Solutions")
+                    .features(List.of(
+                        "Cross-platform application development",
+                        "Custom UI/UX",
+                        "API & backend integration",
+                        "Authentication & user management"
+                    ))
+                    .displayOrder(2)
+                    .isActive(true)
+                    .build(),
+                Service.builder()
+                    .title("Custom Software")
+                    .slug("custom-software")
+                    .shortDescription("Tailored enterprise and business software solutions engineered to automate operations and solve complex challenges.")
+                    .description("Bespoke internal tools, automation pipelines, management systems, and specialized business logic.")
+                    .icon("Code2")
+                    .features(List.of(
+                        "Custom business logic implementation",
+                        "Workflow automation & tooling",
+                        "High performance & reliable codebase",
+                        "Scalable architecture"
+                    ))
+                    .displayOrder(3)
+                    .isActive(true)
+                    .build(),
+                Service.builder()
+                    .title("E-Commerce Solutions")
+                    .slug("ecommerce-solutions")
+                    .shortDescription("High-converting digital storefronts and online commerce platforms with secure payment gateways.")
+                    .description("Full e-commerce architectures, product catalogs, shopping carts, order tracking, and checkout flows.")
+                    .icon("Store")
+                    .features(List.of(
+                        "Custom product catalogs & cart flows",
+                        "Payment gateway integrations",
+                        "Inventory & order management",
+                        "Speed & conversion optimization"
+                    ))
+                    .displayOrder(4)
+                    .isActive(true)
+                    .build(),
+                Service.builder()
+                    .title("API & Backend Development")
+                    .slug("api-backend-development")
+                    .shortDescription("Robust, high-throughput backend services and secure RESTful APIs designed for scalability.")
+                    .description("Secure RESTful services, architecture modeling, microservices, and third-party API orchestrations.")
+                    .icon("Server")
+                    .features(List.of(
+                        "Secure RESTful APIs",
+                        "Architecture modeling & performance",
+                        "JWT & authentication mechanisms",
+                        "Scalable microservices & endpoints"
+                    ))
+                    .displayOrder(5)
+                    .isActive(true)
+                    .build()
+            );
+            serviceRepository.saveAll(defaultServices);
+        }
+    }
+
     @Override
     public List<ServiceResponse> getAllServices() {
+        if (serviceRepository.count() == 0) {
+            initDefaultServices();
+        }
         return serviceRepository.findAllByOrderByDisplayOrderAsc()
                 .stream()
                 .map(mapper::toServiceResponse)
@@ -30,6 +121,9 @@ public class ServicesServiceImpl implements ServicesService {
 
     @Override
     public List<ServiceResponse> getActiveServices() {
+        if (serviceRepository.count() == 0) {
+            initDefaultServices();
+        }
         return serviceRepository.findByIsActiveTrueOrderByDisplayOrderAsc()
                 .stream()
                 .map(mapper::toServiceResponse)
@@ -81,6 +175,10 @@ public class ServicesServiceImpl implements ServicesService {
         existing.setShortDescription(request.getShortDescription());
         existing.setDescription(request.getDescription());
         existing.setIcon(request.getIcon());
+        existing.setPopularTag(request.getPopularTag());
+        existing.setFeatures(request.getFeatures());
+        existing.setButtonText(request.getButtonText());
+        existing.setButtonLink(request.getButtonLink());
         existing.setDisplayOrder(request.getDisplayOrder());
 
         if (request.getIsActive() != null) {

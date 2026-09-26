@@ -1,14 +1,14 @@
 package com.yovexa.solutions.service.impl;
 
+import com.yovexa.solutions.dto.casestudy.CaseStudyRequest;
+import com.yovexa.solutions.dto.casestudy.CaseStudyResponse;
 import com.yovexa.solutions.dto.common.PagedResponse;
-import com.yovexa.solutions.dto.project.ProjectRequest;
-import com.yovexa.solutions.dto.project.ProjectResponse;
 import com.yovexa.solutions.exception.DuplicateResourceException;
 import com.yovexa.solutions.exception.ResourceNotFoundException;
 import com.yovexa.solutions.mapper.EntityMapper;
-import com.yovexa.solutions.model.Project;
-import com.yovexa.solutions.repository.ProjectRepository;
-import com.yovexa.solutions.service.ProjectService;
+import com.yovexa.solutions.model.CaseStudy;
+import com.yovexa.solutions.repository.CaseStudyRepository;
+import com.yovexa.solutions.service.CaseStudyService;
 import com.yovexa.solutions.util.SlugUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,23 +28,23 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-public class ProjectServiceImpl implements ProjectService {
+public class CaseStudyServiceImpl implements CaseStudyService {
 
-    private final ProjectRepository projectRepository;
+    private final CaseStudyRepository caseStudyRepository;
     private final EntityMapper mapper;
     private final MongoTemplate mongoTemplate;
 
     @Override
-    public List<ProjectResponse> getPublicProjects(String category, String search) {
-        List<Project> list = projectRepository.findByStatusOrderByDisplayOrderAsc("PUBLISHED");
+    public List<CaseStudyResponse> getPublicCaseStudies(String category, String search) {
+        List<CaseStudy> list = caseStudyRepository.findByStatusOrderByDisplayOrderAsc("PUBLISHED");
 
         if (category != null && !category.trim().isEmpty() && !category.equalsIgnoreCase("ALL")) {
             String norm = category.trim().toUpperCase().replaceAll("[\\s-]+", "_");
             String catRegex = norm.replace("_", "[ _-]*");
             list = list.stream()
-                    .filter(p -> {
-                        String pCat = p.getCategory() != null ? p.getCategory().toUpperCase().replaceAll("[\\s-]+", "_") : "WEB_APPLICATIONS";
-                        return pCat.equals(norm) || pCat.matches("(?i).*" + catRegex + ".*");
+                    .filter(cs -> {
+                        String csCat = cs.getCategory() != null ? cs.getCategory().toUpperCase().replaceAll("[\\s-]+", "_") : "WEB_APPLICATIONS";
+                        return csCat.equals(norm) || csCat.matches("(?i).*" + catRegex + ".*");
                     })
                     .toList();
         }
@@ -52,28 +52,26 @@ public class ProjectServiceImpl implements ProjectService {
         if (search != null && !search.trim().isEmpty()) {
             String q = search.trim().toLowerCase();
             list = list.stream()
-                    .filter(p -> (p.getName() != null && p.getName().toLowerCase().contains(q)) ||
-                            (p.getTitle() != null && p.getTitle().toLowerCase().contains(q)) ||
-                            (p.getSubtitle() != null && p.getSubtitle().toLowerCase().contains(q)) ||
-                            (p.getClientLabel() != null && p.getClientLabel().toLowerCase().contains(q)) ||
-                            (p.getShortDescription() != null && p.getShortDescription().toLowerCase().contains(q)) ||
-                            (p.getDescription() != null && p.getDescription().toLowerCase().contains(q)) ||
-                            (p.getTechnologies() != null && p.getTechnologies().stream().anyMatch(t -> t != null && t.toLowerCase().contains(q))))
+                    .filter(cs -> (cs.getTitle() != null && cs.getTitle().toLowerCase().contains(q)) ||
+                            (cs.getSubtitle() != null && cs.getSubtitle().toLowerCase().contains(q)) ||
+                            (cs.getSummary() != null && cs.getSummary().toLowerCase().contains(q)) ||
+                            (cs.getProblem() != null && cs.getProblem().toLowerCase().contains(q)) ||
+                            (cs.getSolution() != null && cs.getSolution().toLowerCase().contains(q)))
                     .toList();
         }
 
-        return list.stream().map(mapper::toProjectResponse).toList();
+        return list.stream().map(mapper::toCaseStudyResponse).toList();
     }
 
     @Override
-    public ProjectResponse getProjectBySlug(String slug) {
-        Project project = projectRepository.findBySlug(slug)
-                .orElseThrow(() -> new ResourceNotFoundException("Project", "slug", slug));
-        return mapper.toProjectResponse(project);
+    public CaseStudyResponse getCaseStudyBySlug(String slug) {
+        CaseStudy caseStudy = caseStudyRepository.findBySlug(slug)
+                .orElseThrow(() -> new ResourceNotFoundException("CaseStudy", "slug", slug));
+        return mapper.toCaseStudyResponse(caseStudy);
     }
 
     @Override
-    public PagedResponse<ProjectResponse> getAdminProjects(String search, String category, String status, int page,
+    public PagedResponse<CaseStudyResponse> getAdminCaseStudies(String search, String category, String status, int page,
             int size) {
         Pageable pageable = PageRequest.of(page, size,
                 Sort.by("displayOrder").ascending().and(Sort.by("createdAt").descending()));
@@ -84,12 +82,12 @@ public class ProjectServiceImpl implements ProjectService {
         if (search != null && !search.trim().isEmpty()) {
             String s = search.trim();
             criteriaList.add(new Criteria().orOperator(
-                    Criteria.where("name").regex(s, "i"),
                     Criteria.where("title").regex(s, "i"),
                     Criteria.where("subtitle").regex(s, "i"),
                     Criteria.where("clientLabel").regex(s, "i"),
-                    Criteria.where("shortDescription").regex(s, "i"),
-                    Criteria.where("description").regex(s, "i"),
+                    Criteria.where("summary").regex(s, "i"),
+                    Criteria.where("problem").regex(s, "i"),
+                    Criteria.where("solution").regex(s, "i"),
                     Criteria.where("technologies").regex(s, "i")
             ));
         }
@@ -106,75 +104,68 @@ public class ProjectServiceImpl implements ProjectService {
             query.addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[0])));
         }
 
-        long total = mongoTemplate.count(query, Project.class);
+        long total = mongoTemplate.count(query, CaseStudy.class);
         query.with(pageable);
-        List<Project> list = mongoTemplate.find(query, Project.class);
-        Page<Project> pageResult = new PageImpl<>(list, pageable, total);
+        List<CaseStudy> list = mongoTemplate.find(query, CaseStudy.class);
+        Page<CaseStudy> pageResult = new PageImpl<>(list, pageable, total);
 
-        Page<ProjectResponse> dtoPage = pageResult.map(mapper::toProjectResponse);
+        Page<CaseStudyResponse> dtoPage = pageResult.map(mapper::toCaseStudyResponse);
         return PagedResponse.of(dtoPage);
     }
 
     @Override
-    public ProjectResponse getProjectById(String id) {
-        Project project = projectRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", id));
-        return mapper.toProjectResponse(project);
+    public CaseStudyResponse getCaseStudyById(String id) {
+        CaseStudy caseStudy = caseStudyRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("CaseStudy", "id", id));
+        return mapper.toCaseStudyResponse(caseStudy);
     }
 
     @Override
-    public ProjectResponse createProject(ProjectRequest request) {
-        Project project = mapper.toProject(request);
+    public CaseStudyResponse createCaseStudy(CaseStudyRequest request) {
+        CaseStudy caseStudy = mapper.toCaseStudy(request);
 
-        if (projectRepository.existsBySlug(project.getSlug())) {
-            throw new DuplicateResourceException("Project", "slug", project.getSlug());
+        if (caseStudyRepository.existsBySlug(caseStudy.getSlug())) {
+            throw new DuplicateResourceException("CaseStudy", "slug", caseStudy.getSlug());
         }
 
-        Project saved = projectRepository.save(project);
-        return mapper.toProjectResponse(saved);
+        CaseStudy saved = caseStudyRepository.save(caseStudy);
+        return mapper.toCaseStudyResponse(saved);
     }
 
     @Override
-    public ProjectResponse updateProject(String id, ProjectRequest request) {
-        Project existing = projectRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", id));
+    public CaseStudyResponse updateCaseStudy(String id, CaseStudyRequest request) {
+        CaseStudy existing = caseStudyRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("CaseStudy", "id", id));
 
-        existing.setName(request.getName());
-        existing.setTitle(request.getName());
+        existing.setTitle(request.getTitle());
 
         String targetSlug = (request.getSlug() != null && !request.getSlug().trim().isEmpty())
                 ? SlugUtils.toSlug(request.getSlug())
                 : existing.getSlug();
 
-        if (!existing.getSlug().equals(targetSlug) && projectRepository.existsBySlugAndIdNot(targetSlug, id)) {
-            throw new DuplicateResourceException("Project", "slug", targetSlug);
+        if (!existing.getSlug().equals(targetSlug) && caseStudyRepository.existsBySlugAndIdNot(targetSlug, id)) {
+            throw new DuplicateResourceException("CaseStudy", "slug", targetSlug);
         }
         existing.setSlug(targetSlug);
 
         existing.setSubtitle(request.getSubtitle());
-        existing.setClientLabel(request.getClientLabel());
-        existing.setShortDescription(request.getShortDescription());
-        if (request.getDescription() != null && !request.getDescription().trim().isEmpty()) {
-            existing.setDescription(request.getDescription());
-        } else if (request.getShortDescription() != null && !request.getShortDescription().trim().isEmpty()) {
-            existing.setDescription(request.getShortDescription());
-        }
+        existing.setProjectReference(request.getProjectReference());
         if (request.getCategory() != null) {
             existing.setCategory(request.getCategory().toUpperCase());
         }
-        existing.setProjectType(request.getProjectType());
-        existing.setFeaturedImage(request.getFeaturedImage());
-        existing.setImage(request.getFeaturedImage());
+        existing.setClientLabel(request.getClientLabel());
+        existing.setSummary(request.getSummary());
+        existing.setProblem(request.getProblem());
+        existing.setSolution(request.getSolution());
         if (request.getFeatures() != null) {
             existing.setFeatures(request.getFeatures());
         }
         if (request.getTechnologies() != null) {
             existing.setTechnologies(request.getTechnologies());
         }
-        existing.setProjectUrl(request.getProjectUrl());
-        existing.setLiveUrl(request.getProjectUrl());
+        existing.setFeaturedImage(request.getFeaturedImage());
+        existing.setLiveUrl(request.getLiveUrl());
         existing.setGithubUrl(request.getGithubUrl());
-        existing.setCaseStudyUrl(request.getCaseStudyUrl());
 
         if (request.getStatus() != null) {
             existing.setStatus(request.getStatus().toUpperCase());
@@ -186,28 +177,28 @@ public class ProjectServiceImpl implements ProjectService {
         existing.setSeoTitle(request.getSeoTitle());
         existing.setSeoDescription(request.getSeoDescription());
 
-        Project saved = projectRepository.save(existing);
-        return mapper.toProjectResponse(saved);
+        CaseStudy saved = caseStudyRepository.save(existing);
+        return mapper.toCaseStudyResponse(saved);
     }
 
     @Override
-    public void deleteProject(String id) {
-        if (!projectRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Project", "id", id);
+    public void deleteCaseStudy(String id) {
+        if (!caseStudyRepository.existsById(id)) {
+            throw new ResourceNotFoundException("CaseStudy", "id", id);
         }
-        projectRepository.deleteById(id);
+        caseStudyRepository.deleteById(id);
     }
 
     @Override
-    public List<Map<String, String>> getProjectCategories() {
+    public List<Map<String, String>> getCaseStudyCategories() {
         Map<String, String> standard = new LinkedHashMap<>();
-        standard.put("all", "All Projects");
+        standard.put("all", "All Case Studies");
         standard.put("WEB_APPLICATIONS", "Web Applications");
         standard.put("MOBILE_APPS", "Mobile Apps");
         standard.put("E_COMMERCE", "E-Commerce");
 
         try {
-            List<String> distinctInDb = mongoTemplate.getCollection("projects")
+            List<String> distinctInDb = mongoTemplate.getCollection("case_studies")
                     .distinct("category", String.class)
                     .into(new ArrayList<>());
 

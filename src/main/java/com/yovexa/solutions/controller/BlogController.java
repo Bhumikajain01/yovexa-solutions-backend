@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -36,6 +37,13 @@ public class BlogController {
             @RequestParam(required = false) String category) {
         List<BlogResponse> blogs = blogService.getPublicBlogs(search, category);
         return ResponseEntity.ok(ApiResponse.success(blogs));
+    }
+
+    @GetMapping("/api/blogs/categories")
+    @Operation(summary = "Get blog categories (Public)", description = "Retrieves blog categories dynamically from backend.")
+    public ResponseEntity<ApiResponse<List<Map<String, String>>>> getBlogCategories() {
+        List<Map<String, String>> categories = blogService.getBlogCategories();
+        return ResponseEntity.ok(ApiResponse.success(categories));
     }
 
     @GetMapping("/api/blogs/{slug}")

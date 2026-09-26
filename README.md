@@ -139,8 +139,8 @@ Create a `.env` file or export the following variables:
 | Variable | Description | Default / Example |
 |---|---|---|
 | `SERVER_PORT` | HTTP port for backend server | `8080` |
-| `MONGODB_URI` | MongoDB Connection URI (Local or Atlas) | `mongodb://localhost:27017/yovexa_solutions` |
-| `MONGODB_DATABASE` | MongoDB Database Name | `yovexa_solutions` |
+| `MONGODB_URI` | MongoDB Connection URI (Local or Atlas) | `mongodb://localhost:27017/yovexa_admin` |
+| `MONGODB_DATABASE` | MongoDB Database Name | `yovexa_admin` |
 | `JWT_SECRET` | 256-bit secret string for HMAC signing | `404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970` |
 | `JWT_EXPIRATION_MS` | Token validity duration in milliseconds | `86400000` (24h) |
 | `ADMIN_NAME` | Initial admin account name | `Yovexa Admin` |

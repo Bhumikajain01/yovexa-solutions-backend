@@ -24,6 +24,13 @@ public class ProjectRequest {
     @Schema(description = "URL slug for project (auto-generated if omitted)", example = "example-project")
     private String slug;
 
+    @Schema(description = "One-line architecture or subtitle", example = "Enterprise Sales Rep & Route Management")
+    private String subtitle;
+
+    @JsonAlias({"statusBadge", "badge"})
+    @Schema(description = "Status badge tag", example = "Production / Enterprise System")
+    private String clientLabel;
+
     @NotBlank(message = "Short description is required")
     @JsonAlias("summary")
     @Schema(description = "Short teaser description", example = "Example project description")
@@ -35,20 +42,22 @@ public class ProjectRequest {
 
     @Builder.Default
     @Schema(description = "Project category", example = "Web Application")
-    private String category = "WEB_APPLICATIONS"; // WEB_APPLICATIONS, MOBILE_APPS, BUSINESS_SYSTEMS, E_COMMERCE, SAAS_PLATFORMS
+    private String category = "WEB_APPLICATIONS"; // WEB_APPLICATIONS, MOBILE_APPS, E_COMMERCE
 
     @Schema(description = "Project type", example = "Full Stack Web App")
     private String projectType;
 
+    @JsonAlias({"image", "thumbnailUrl"})
     @Schema(description = "Featured cover image URL", example = "https://images.unsplash.com/photo-1555066931-4365d14bab8c")
     private String featuredImage;
 
-    @Schema(description = "Gallery image URLs")
-    private List<String> galleryImages;
+    @Schema(description = "Key features / highlights")
+    private List<String> features;
 
     @Schema(description = "Technologies used in project", example = "[\"React\", \"Spring Boot\", \"MongoDB\"]")
     private List<String> technologies;
 
+    @JsonAlias("liveUrl")
     @Schema(description = "Live demo URL", example = "https://example.com")
     private String projectUrl;
 

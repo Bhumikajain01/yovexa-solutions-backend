@@ -15,4 +15,5 @@ public interface BlogService {
     BlogResponse createBlog(BlogRequest request);
     BlogResponse updateBlog(String id, BlogRequest request);
     void deleteBlog(String id);
+    java.util.List<java.util.Map<String, String>> getBlogCategories();
 }

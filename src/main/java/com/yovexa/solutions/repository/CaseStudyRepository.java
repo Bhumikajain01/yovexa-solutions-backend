@@ -1,6 +1,6 @@
 package com.yovexa.solutions.repository;
 
-import com.yovexa.solutions.model.Project;
+import com.yovexa.solutions.model.CaseStudy;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -9,23 +9,24 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ProjectRepository extends MongoRepository<Project, String> {
-    Optional<Project> findBySlug(String slug);
+public interface CaseStudyRepository extends MongoRepository<CaseStudy, String> {
+
+    Optional<CaseStudy> findBySlug(String slug);
 
     boolean existsBySlug(String slug);
 
     boolean existsBySlugAndIdNot(String slug, String id);
 
     @Query(value = "{ $or: [ { 'status': ?0 }, { 'status': { $exists: false } }, { 'status': null }, { 'status': '' } ] }", sort = "{ 'displayOrder': 1, 'createdAt': -1 }")
-    List<Project> findByStatusOrderByDisplayOrderAsc(String status);
+    List<CaseStudy> findByStatusOrderByDisplayOrderAsc(String status);
 
     @Query(value = "{ $and: [ { $or: [ { 'status': ?0 }, { 'status': { $exists: false } }, { 'status': null }, { 'status': '' } ] }, { 'category': { $regex: ?1, $options: 'i' } } ] }", sort = "{ 'displayOrder': 1, 'createdAt': -1 }")
-    List<Project> findByStatusAndCategoryOrderByDisplayOrderAsc(String status, String category);
+    List<CaseStudy> findByStatusAndCategoryOrderByDisplayOrderAsc(String status, String category);
 
     @Query(value = "{ $or: [ { 'status': ?0 }, { 'status': { $exists: false } }, { 'status': null }, { 'status': '' } ] }", count = true)
     long countByStatus(String status);
 
 
 
-    List<Project> findTop5ByOrderByCreatedAtDesc();
+    List<CaseStudy> findTop5ByOrderByCreatedAtDesc();
 }

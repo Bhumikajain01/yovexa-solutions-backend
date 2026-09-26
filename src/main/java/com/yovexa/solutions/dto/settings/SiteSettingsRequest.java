@@ -46,7 +46,4 @@ public class SiteSettingsRequest {
 
     @Schema(description = "Facebook page URL", example = "https://facebook.com/yovexasolutions")
     private String facebook;
-
-    @Schema(description = "YouTube channel URL", example = "https://youtube.com/@yovexasolutions")
-    private String youtube;
 }

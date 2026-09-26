@@ -25,33 +25,39 @@ public class Project {
     private String id;
 
     private String name;
+    private String title;
 
     @Indexed(unique = true)
     private String slug;
+
+    private String subtitle;
+    private String clientLabel;
 
     private String shortDescription;
     private String description;
 
     @Indexed
-    private String category; // WEB_APPLICATIONS, MOBILE_APPS, BUSINESS_SYSTEMS, E_COMMERCE, SAAS_PLATFORMS
+    private String category; // WEB_APPLICATIONS, MOBILE_APPS, E_COMMERCE
 
     private String projectType;
 
     private String featuredImage;
+    private String image;
 
     @Builder.Default
-    private List<String> galleryImages = new ArrayList<>();
+    private List<String> features = new ArrayList<>();
 
     @Builder.Default
     private List<String> technologies = new ArrayList<>();
 
     private String projectUrl;
+    private String liveUrl;
     private String githubUrl;
     private String caseStudyUrl;
 
     @Builder.Default
     @Indexed
-    private String status = "DRAFT"; // DRAFT, PUBLISHED
+    private String status = "PUBLISHED"; // DRAFT, PUBLISHED
 
     @Builder.Default
     @Indexed
@@ -70,4 +76,54 @@ public class Project {
 
     @LastModifiedDate
     private Instant updatedAt;
+
+    public String getName() {
+        return (name != null && !name.trim().isEmpty()) ? name : title;
+    }
+
+    public String getTitle() {
+        return (title != null && !title.trim().isEmpty()) ? title : name;
+    }
+
+    public String getFeaturedImage() {
+        return (featuredImage != null && !featuredImage.trim().isEmpty()) ? featuredImage : image;
+    }
+
+    public String getImage() {
+        return (image != null && !image.trim().isEmpty()) ? image : featuredImage;
+    }
+
+    public String getProjectUrl() {
+        return (projectUrl != null && !projectUrl.trim().isEmpty()) ? projectUrl : liveUrl;
+    }
+
+    public String getLiveUrl() {
+        return (liveUrl != null && !liveUrl.trim().isEmpty()) ? liveUrl : projectUrl;
+    }
+
+    public String getShortDescription() {
+        if (shortDescription != null && !shortDescription.trim().isEmpty()) {
+            return shortDescription;
+        }
+        if (description != null && description.length() > 160) {
+            return description.substring(0, 157) + "...";
+        }
+        return description;
+    }
+
+    public String getStatus() {
+        return (status != null && !status.trim().isEmpty()) ? status : "PUBLISHED";
+    }
+
+    public List<String> getFeatures() {
+        return features != null ? features : new ArrayList<>();
+    }
+
+    public List<String> getTechnologies() {
+        return technologies != null ? technologies : new ArrayList<>();
+    }
+
+    public String getCategory() {
+        return (category != null && !category.trim().isEmpty()) ? category : "WEB_APPLICATIONS";
+    }
 }

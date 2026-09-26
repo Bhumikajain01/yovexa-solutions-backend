@@ -30,12 +30,19 @@ public class ProjectController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Published projects retrieved successfully")
     })
     public ResponseEntity<ApiResponse<List<ProjectResponse>>> getPublicProjects(
-            @io.swagger.v3.oas.annotations.Parameter(description = "Filter by category (e.g. WEB_APPLICATIONS, MOBILE_APPS, SAAS_PLATFORMS)", required = false)
+            @io.swagger.v3.oas.annotations.Parameter(description = "Filter by category (e.g. WEB_APPLICATIONS, MOBILE_APPS, E_COMMERCE)", required = false)
             @RequestParam(required = false) String category,
             @io.swagger.v3.oas.annotations.Parameter(description = "Search keyword in project name or summary", required = false)
             @RequestParam(required = false) String search) {
         List<ProjectResponse> projects = projectService.getPublicProjects(category, search);
         return ResponseEntity.ok(ApiResponse.success(projects));
+    }
+
+    @GetMapping("/api/projects/categories")
+    @Operation(summary = "Get project categories (Public)", description = "Retrieves project categories dynamically from backend.")
+    public ResponseEntity<ApiResponse<java.util.List<java.util.Map<String, String>>>> getProjectCategories() {
+        java.util.List<java.util.Map<String, String>> categories = projectService.getProjectCategories();
+        return ResponseEntity.ok(ApiResponse.success(categories));
     }
 
     @GetMapping("/api/projects/{slug}")

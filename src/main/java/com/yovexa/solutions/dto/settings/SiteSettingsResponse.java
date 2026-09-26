@@ -27,7 +27,6 @@ public class SiteSettingsResponse {
     private String github;
     private String instagram;
     private String facebook;
-    private String youtube;
 
     private Instant updatedAt;
 }

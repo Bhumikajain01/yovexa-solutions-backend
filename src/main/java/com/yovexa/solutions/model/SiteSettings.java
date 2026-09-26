@@ -34,7 +34,7 @@ public class SiteSettings {
     private String linkedin;
     private String github;
     private String instagram;
- 
+    private String facebook;
 
     @LastModifiedDate
     private Instant updatedAt;

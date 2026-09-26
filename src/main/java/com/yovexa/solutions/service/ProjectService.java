@@ -14,4 +14,5 @@ public interface ProjectService {
     ProjectResponse createProject(ProjectRequest request);
     ProjectResponse updateProject(String id, ProjectRequest request);
     void deleteProject(String id);
+    java.util.List<java.util.Map<String, String>> getProjectCategories();
 }

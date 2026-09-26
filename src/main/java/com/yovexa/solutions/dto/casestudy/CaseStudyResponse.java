@@ -1,4 +1,4 @@
-package com.yovexa.solutions.dto.project;
+package com.yovexa.solutions.dto.casestudy;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,30 +12,22 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProjectResponse {
+public class CaseStudyResponse {
     private String id;
-    private String name;
     private String title;
-    private String projectName;
     private String slug;
     private String subtitle;
-    private String clientLabel;
-    private String shortDescription;
-    private String summary;
-    private String description;
-    private String fullDescription;
-    private String solution;
+    private String projectReference;
     private String category;
-    private String projectType;
-    private String featuredImage;
-    private String image;
-    private String thumbnailUrl;
+    private String clientLabel;
+    private String summary;
+    private String problem;
+    private String solution;
     private List<String> features;
     private List<String> technologies;
-    private String projectUrl;
+    private String featuredImage;
     private String liveUrl;
     private String githubUrl;
-    private String caseStudyUrl;
     private String status;
     private boolean featured;
     private int displayOrder;
