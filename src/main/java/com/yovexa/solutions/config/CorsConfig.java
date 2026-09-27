@@ -20,68 +20,68 @@ import java.util.Set;
 @Configuration
 public class CorsConfig implements WebMvcConfigurer {
 
-    @Value("${frontend.allowed-origins:https://yovexa-solutions-frontend.vercel.app,https://yovexa-solutions-backend.vercel.app}")
-    private String allowedOrigins;
+        @Value("${frontend.allowed-origins:https://yovexa-solutions.vercel.app,https://yovexa-solutions-backend.vercel.app}")
+        private String allowedOrigins;
 
-    private List<String> getAllowedOriginsList() {
-        Set<String> origins = new LinkedHashSet<>(Arrays.asList(
-                "https://yovexa-solutions-frontend.vercel.app",
-                "https://yovexa-solutions-backend.vercel.app",
-                "http://localhost:5173",
-                "http://localhost:5174",
-                "http://localhost:8080",
-                "http://localhost:8081",
-                "http://localhost:3000"
-        ));
+        private List<String> getAllowedOriginsList() {
+                Set<String> origins = new LinkedHashSet<>(Arrays.asList(
+                                "https://yovexa-solutions.vercel.app",
+                                "https://yovexa-solutions-backend.vercel.app",
+                                "http://localhost:5173",
+                                "http://localhost:5174",
+                                "http://localhost:8080",
+                                "http://localhost:8081",
+                                "http://localhost:3000"));
 
-        if (allowedOrigins != null && !allowedOrigins.isBlank()) {
-            Arrays.stream(allowedOrigins.split(","))
-                    .map(String::trim)
-                    .map(s -> s.endsWith("/") ? s.substring(0, s.length() - 1) : s)
-                    .filter(s -> !s.isBlank())
-                    .forEach(origins::add);
+                if (allowedOrigins != null && !allowedOrigins.isBlank()) {
+                        Arrays.stream(allowedOrigins.split(","))
+                                        .map(String::trim)
+                                        .map(s -> s.endsWith("/") ? s.substring(0, s.length() - 1) : s)
+                                        .filter(s -> !s.isBlank())
+                                        .forEach(origins::add);
+                }
+                return new ArrayList<>(origins);
         }
-        return new ArrayList<>(origins);
-    }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        List<String> origins = getAllowedOriginsList();
-        log.info("Configuring CORS with allowed origins: {}", origins);
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
+                CorsConfiguration configuration = new CorsConfiguration();
+                List<String> origins = getAllowedOriginsList();
+                log.info("Configuring CORS with allowed origins: {}", origins);
 
-        configuration.setAllowedOrigins(origins);
-        configuration.setAllowedOriginPatterns(Arrays.asList(
-                "https://*.vercel.app",
-                "http://localhost:*",
-                "http://127.0.0.1:*"
-        ));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setExposedHeaders(
-                Arrays.asList("Access-Control-Allow-Origin", "Access-Control-Allow-Credentials", "Authorization"));
-        configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L);
+                configuration.setAllowedOrigins(origins);
+                configuration.setAllowedOriginPatterns(Arrays.asList(
+                                "https://*.vercel.app",
+                                "http://localhost:*",
+                                "http://127.0.0.1:*"));
+                configuration.setAllowedMethods(
+                                Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"));
+                configuration.setAllowedHeaders(Arrays.asList("*"));
+                configuration.setExposedHeaders(
+                                Arrays.asList("Access-Control-Allow-Origin", "Access-Control-Allow-Credentials",
+                                                "Authorization"));
+                configuration.setAllowCredentials(true);
+                configuration.setMaxAge(3600L);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                source.registerCorsConfiguration("/**", configuration);
+                return source;
+        }
 
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        List<String> origins = getAllowedOriginsList();
-        registry.addMapping("/**")
-                .allowedOrigins(origins.toArray(new String[0]))
-                .allowedOriginPatterns(
-                        "https://*.vercel.app",
-                        "http://localhost:*",
-                        "http://127.0.0.1:*"
-                )
-                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD")
-                .allowedHeaders("*")
-                .exposedHeaders("Authorization", "Access-Control-Allow-Origin", "Access-Control-Allow-Credentials")
-                .allowCredentials(true)
-                .maxAge(3600);
-    }
+        @Override
+        public void addCorsMappings(CorsRegistry registry) {
+                List<String> origins = getAllowedOriginsList();
+                registry.addMapping("/**")
+                                .allowedOrigins(origins.toArray(new String[0]))
+                                .allowedOriginPatterns(
+                                                "https://*.vercel.app",
+                                                "http://localhost:*",
+                                                "http://127.0.0.1:*")
+                                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD")
+                                .allowedHeaders("*")
+                                .exposedHeaders("Authorization", "Access-Control-Allow-Origin",
+                                                "Access-Control-Allow-Credentials")
+                                .allowCredentials(true)
+                                .maxAge(3600);
+        }
 }
