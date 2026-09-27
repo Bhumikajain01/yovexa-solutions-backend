@@ -46,4 +46,7 @@ public class SiteSettingsRequest {
 
     @Schema(description = "Facebook page URL", example = "https://facebook.com/yovexasolutions")
     private String facebook;
+
+    @Schema(description = "List of estimated budget ranges for inquiry dropdown", example = "[\"Under ₹25,000\", \"₹25,000 – ₹50,000\", \"₹50,000 – ₹1,00,000\", \"₹1,00,000+\", \"Not Sure Yet\"]")
+    private java.util.List<String> budgetOptions;
 }

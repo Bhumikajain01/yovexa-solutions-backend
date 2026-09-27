@@ -417,6 +417,9 @@ public class EntityMapper {
                 .github(settings.getGithub())
                 .instagram(settings.getInstagram())
                 .facebook(settings.getFacebook())
+                .budgetOptions(settings.getBudgetOptions() != null && !settings.getBudgetOptions().isEmpty()
+                        ? settings.getBudgetOptions()
+                        : java.util.List.of("Under ₹25,000", "₹25,000 – ₹50,000", "₹50,000 – ₹1,00,000", "₹1,00,000+", "Not Sure Yet"))
                 .updatedAt(settings.getUpdatedAt())
                 .build();
     }
@@ -448,6 +451,8 @@ public class EntityMapper {
             entity.setInstagram(request.getInstagram());
         if (request.getFacebook() != null)
             entity.setFacebook(request.getFacebook());
+        if (request.getBudgetOptions() != null)
+            entity.setBudgetOptions(request.getBudgetOptions());
     }
 
     // CASE STUDY

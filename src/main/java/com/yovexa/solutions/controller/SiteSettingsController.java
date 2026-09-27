@@ -29,6 +29,19 @@ public class SiteSettingsController {
         return ResponseEntity.ok(ApiResponse.success(settings));
     }
 
+    @GetMapping({"/api/site-settings/budget-options", "/api/content/budget-options"})
+    @Operation(summary = "Get estimated budget options (Public)", description = "Retrieves the dynamic list of project budget options for inquiry forms.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Budget options retrieved successfully")
+    })
+    public ResponseEntity<ApiResponse<java.util.List<String>>> getBudgetOptions() {
+        SiteSettingsResponse settings = siteSettingsService.getSettings();
+        java.util.List<String> options = settings != null && settings.getBudgetOptions() != null
+                ? settings.getBudgetOptions()
+                : com.yovexa.solutions.service.impl.SiteSettingsServiceImpl.DEFAULT_BUDGET_OPTIONS;
+        return ResponseEntity.ok(ApiResponse.success(options));
+    }
+
     // Admin Endpoints
     @GetMapping({"/api/admin/site-settings", "/api/admin/content/settings", "/api/admin/content/footer", "/api/admin/content/contact"})
     @SecurityRequirement(name = "bearerAuth")

@@ -28,5 +28,7 @@ public class SiteSettingsResponse {
     private String instagram;
     private String facebook;
 
+    private java.util.List<String> budgetOptions;
+
     private Instant updatedAt;
 }
