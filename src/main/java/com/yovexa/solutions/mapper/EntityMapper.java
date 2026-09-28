@@ -49,7 +49,7 @@ public class EntityMapper {
                 .name(admin.getName())
                 .email(admin.getEmail())
                 .role(admin.getRole())
-                .isActive(admin.getIsActive() != null ? admin.getIsActive() : true)
+                .isActive(Boolean.TRUE.equals(admin.getIsActive()))
                 .createdAt(admin.getCreatedAt())
                 .updatedAt(admin.getUpdatedAt())
                 .build();
@@ -63,7 +63,7 @@ public class EntityMapper {
                 .name(admin.getName())
                 .email(admin.getEmail())
                 .role(admin.getRole())
-                .isActive(admin.getIsActive() != null ? admin.getIsActive() : true)
+                .isActive(Boolean.TRUE.equals(admin.getIsActive()))
                 .build();
     }
 

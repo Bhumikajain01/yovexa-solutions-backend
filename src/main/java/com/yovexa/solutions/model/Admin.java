@@ -40,4 +40,5 @@ public class Admin {
 
     @LastModifiedDate
     private Instant updatedAt;
+
 }

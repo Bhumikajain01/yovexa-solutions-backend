@@ -51,7 +51,7 @@ public class CaseStudyRequest {
     @Schema(description = "Key architectural features")
     private List<String> features;
 
-    @Schema(description = "Technologies used in case study", example = "[\"Kafka\", \"Redis\", \"Spring Boot\", \"React\"]")
+    @Schema(description = "Technologies used in case study", example = "[\"Kafka\", \"Mongodb\", \"Spring Boot\", \"React\"]")
     private List<String> technologies;
 
     @JsonAlias("image")
