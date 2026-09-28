@@ -8,8 +8,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,7 +29,9 @@ public class SiteSettingsController {
     })
     public ResponseEntity<ApiResponse<SiteSettingsResponse>> getSettings() {
         SiteSettingsResponse settings = siteSettingsService.getSettings();
-        return ResponseEntity.ok(ApiResponse.success(settings));
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(5, TimeUnit.MINUTES).cachePublic().staleWhileRevalidate(10, TimeUnit.MINUTES))
+                .body(ApiResponse.success(settings));
     }
 
     @GetMapping({"/api/site-settings/budget-options", "/api/content/budget-options"})
@@ -39,7 +44,9 @@ public class SiteSettingsController {
         java.util.List<String> options = settings != null && settings.getBudgetOptions() != null
                 ? settings.getBudgetOptions()
                 : com.yovexa.solutions.service.impl.SiteSettingsServiceImpl.DEFAULT_BUDGET_OPTIONS;
-        return ResponseEntity.ok(ApiResponse.success(options));
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(15, TimeUnit.MINUTES).cachePublic().staleWhileRevalidate(30, TimeUnit.MINUTES))
+                .body(ApiResponse.success(options));
     }
 
     // Admin Endpoints

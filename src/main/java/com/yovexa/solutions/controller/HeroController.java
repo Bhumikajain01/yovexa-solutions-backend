@@ -9,11 +9,13 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequiredArgsConstructor
@@ -31,7 +33,9 @@ public class HeroController {
     })
     public ResponseEntity<ApiResponse<HeroResponse>> getActiveHero() {
         HeroResponse hero = heroService.getActiveHero();
-        return ResponseEntity.ok(ApiResponse.success(hero));
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(5, TimeUnit.MINUTES).cachePublic().staleWhileRevalidate(10, TimeUnit.MINUTES))
+                .body(ApiResponse.success(hero));
     }
 
     // Admin Endpoints

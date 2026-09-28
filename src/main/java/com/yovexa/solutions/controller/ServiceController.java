@@ -9,11 +9,13 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,7 +32,9 @@ public class ServiceController {
     })
     public ResponseEntity<ApiResponse<List<ServiceResponse>>> getActiveServices() {
         List<ServiceResponse> services = servicesService.getActiveServices();
-        return ResponseEntity.ok(ApiResponse.success(services));
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(5, TimeUnit.MINUTES).cachePublic().staleWhileRevalidate(10, TimeUnit.MINUTES))
+                .body(ApiResponse.success(services));
     }
 
     @GetMapping("/api/services/{slug}")
@@ -43,7 +47,9 @@ public class ServiceController {
             @io.swagger.v3.oas.annotations.Parameter(description = "Service unique URL slug (e.g. web-development)", required = true)
             @PathVariable String slug) {
         ServiceResponse service = servicesService.getServiceBySlug(slug);
-        return ResponseEntity.ok(ApiResponse.success(service));
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(5, TimeUnit.MINUTES).cachePublic().staleWhileRevalidate(10, TimeUnit.MINUTES))
+                .body(ApiResponse.success(service));
     }
 
     // Admin Endpoints
