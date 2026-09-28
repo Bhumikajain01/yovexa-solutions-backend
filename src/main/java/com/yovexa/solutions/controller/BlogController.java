@@ -10,12 +10,14 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequiredArgsConstructor
@@ -36,14 +38,18 @@ public class BlogController {
             @io.swagger.v3.oas.annotations.Parameter(description = "Blog category filter", required = false)
             @RequestParam(required = false) String category) {
         List<BlogResponse> blogs = blogService.getPublicBlogs(search, category);
-        return ResponseEntity.ok(ApiResponse.success(blogs));
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(5, TimeUnit.MINUTES).cachePublic().staleWhileRevalidate(10, TimeUnit.MINUTES))
+                .body(ApiResponse.success(blogs));
     }
 
     @GetMapping("/api/blogs/categories")
     @Operation(summary = "Get blog categories (Public)", description = "Retrieves blog categories dynamically from backend.")
     public ResponseEntity<ApiResponse<List<Map<String, String>>>> getBlogCategories() {
         List<Map<String, String>> categories = blogService.getBlogCategories();
-        return ResponseEntity.ok(ApiResponse.success(categories));
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(15, TimeUnit.MINUTES).cachePublic().staleWhileRevalidate(30, TimeUnit.MINUTES))
+                .body(ApiResponse.success(categories));
     }
 
     @GetMapping("/api/blogs/{slug}")
@@ -56,7 +62,9 @@ public class BlogController {
             @io.swagger.v3.oas.annotations.Parameter(description = "Blog unique URL slug", required = true)
             @PathVariable String slug) {
         BlogResponse blog = blogService.getBlogBySlug(slug);
-        return ResponseEntity.ok(ApiResponse.success(blog));
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(5, TimeUnit.MINUTES).cachePublic().staleWhileRevalidate(10, TimeUnit.MINUTES))
+                .body(ApiResponse.success(blog));
     }
 
     // Admin Endpoints

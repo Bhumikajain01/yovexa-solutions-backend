@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -24,6 +25,7 @@ public class EmailServiceImpl implements EmailService {
     @Value("${app.mail.notification-recipient:${spring.mail.username:}}")
     private String notificationRecipient;
 
+    @Async
     @Override
     public void sendSimpleEmail(String to, String subject, String text) {
         if (mailFrom == null || mailFrom.isBlank()) {
@@ -44,6 +46,7 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
+    @Async
     @Override
     public void sendInquiryNotification(ContactInquiry inquiry) {
         String recipient = (notificationRecipient != null && !notificationRecipient.isBlank())

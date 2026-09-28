@@ -10,11 +10,13 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequiredArgsConstructor
@@ -35,14 +37,18 @@ public class ProjectController {
             @io.swagger.v3.oas.annotations.Parameter(description = "Search keyword in project name or summary", required = false)
             @RequestParam(required = false) String search) {
         List<ProjectResponse> projects = projectService.getPublicProjects(category, search);
-        return ResponseEntity.ok(ApiResponse.success(projects));
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(5, TimeUnit.MINUTES).cachePublic().staleWhileRevalidate(10, TimeUnit.MINUTES))
+                .body(ApiResponse.success(projects));
     }
 
     @GetMapping("/api/projects/categories")
     @Operation(summary = "Get project categories (Public)", description = "Retrieves project categories dynamically from backend.")
     public ResponseEntity<ApiResponse<java.util.List<java.util.Map<String, String>>>> getProjectCategories() {
         java.util.List<java.util.Map<String, String>> categories = projectService.getProjectCategories();
-        return ResponseEntity.ok(ApiResponse.success(categories));
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(15, TimeUnit.MINUTES).cachePublic().staleWhileRevalidate(30, TimeUnit.MINUTES))
+                .body(ApiResponse.success(categories));
     }
 
     @GetMapping("/api/projects/{slug}")
@@ -55,7 +61,9 @@ public class ProjectController {
             @io.swagger.v3.oas.annotations.Parameter(description = "Project unique URL slug", required = true)
             @PathVariable String slug) {
         ProjectResponse project = projectService.getProjectBySlug(slug);
-        return ResponseEntity.ok(ApiResponse.success(project));
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(5, TimeUnit.MINUTES).cachePublic().staleWhileRevalidate(10, TimeUnit.MINUTES))
+                .body(ApiResponse.success(project));
     }
 
     // Admin Endpoints
