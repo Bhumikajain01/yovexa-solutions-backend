@@ -7,6 +7,8 @@ import com.yovexa.solutions.model.SiteSettings;
 import com.yovexa.solutions.repository.SiteSettingsRepository;
 import com.yovexa.solutions.service.SiteSettingsService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -27,6 +29,7 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
     );
 
     @Override
+    @Cacheable(value = "settings", key = "'site_settings'")
     public SiteSettingsResponse getSettings() {
         return settingsRepository.getSettings()
                 .map(settings -> {
@@ -44,6 +47,7 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
     }
 
     @Override
+    @CacheEvict(value = "settings", allEntries = true)
     public SiteSettingsResponse updateSettings(SiteSettingsRequest request) {
         SiteSettings settings = settingsRepository.getSettings()
                 .orElseGet(() -> SiteSettings.builder().id("default_settings").build());

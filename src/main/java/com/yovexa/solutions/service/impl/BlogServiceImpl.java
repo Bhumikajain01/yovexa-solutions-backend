@@ -11,6 +11,8 @@ import com.yovexa.solutions.repository.BlogRepository;
 import com.yovexa.solutions.service.BlogService;
 import com.yovexa.solutions.util.SlugUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -37,6 +39,7 @@ public class BlogServiceImpl implements BlogService {
     private final MongoTemplate mongoTemplate;
 
     @Override
+    @Cacheable(value = "blogs", key = "'public-' + (#search != null ? #search : '') + '-' + (#category != null ? #category : 'all')")
     public List<BlogResponse> getPublicBlogs(String search, String category) {
         List<Blog> list;
         if (category != null && !category.trim().isEmpty() && !category.equalsIgnoreCase("ALL")) {
@@ -64,6 +67,7 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
+    @Cacheable(value = "blogs", key = "'paged-' + (#search != null ? #search : '') + '-' + (#category != null ? #category : 'all') + '-' + #page + '-' + #size")
     public PagedResponse<BlogResponse> getPublicBlogsPaged(String search, String category, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("publishedAt").descending());
 
@@ -97,6 +101,7 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
+    @Cacheable(value = "blogs", key = "'slug-' + #slug")
     public BlogResponse getBlogBySlug(String slug) {
         Blog blog = blogRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Blog", "slug", slug));
@@ -104,6 +109,7 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
+    @Cacheable(value = "blogs", key = "'admin-' + (#search != null ? #search : '') + '-' + (#category != null ? #category : 'all') + '-' + (#status != null ? #status : 'all') + '-' + #page + '-' + #size")
     public PagedResponse<BlogResponse> getAdminBlogs(String search, String category, String status, int page,
             int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
@@ -143,6 +149,7 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
+    @Cacheable(value = "blogs", key = "'id-' + #id")
     public BlogResponse getBlogById(String id) {
         Blog blog = blogRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Blog", "id", id));
@@ -150,6 +157,7 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
+    @CacheEvict(value = {"blogs", "dashboard"}, allEntries = true)
     public BlogResponse createBlog(BlogRequest request) {
         Blog blog = mapper.toBlog(request);
 
@@ -162,6 +170,7 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
+    @CacheEvict(value = {"blogs", "dashboard"}, allEntries = true)
     public BlogResponse updateBlog(String id, BlogRequest request) {
         Blog existing = blogRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Blog", "id", id));
@@ -204,6 +213,7 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
+    @CacheEvict(value = {"blogs", "dashboard"}, allEntries = true)
     public void deleteBlog(String id) {
         if (!blogRepository.existsById(id)) {
             throw new ResourceNotFoundException("Blog", "id", id);
@@ -212,6 +222,7 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
+    @Cacheable(value = "blogs", key = "'categories'")
     public List<Map<String, String>> getBlogCategories() {
         Map<String, String> standard = new LinkedHashMap<>();
         standard.put("all", "All Articles");

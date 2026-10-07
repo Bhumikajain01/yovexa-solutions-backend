@@ -12,6 +12,9 @@ import com.yovexa.solutions.util.SlugUtils;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+
 import java.util.List;
 
 @org.springframework.stereotype.Service
@@ -109,6 +112,7 @@ public class ServicesServiceImpl implements ServicesService {
     }
 
     @Override
+    @Cacheable(value = "services", key = "'all'")
     public List<ServiceResponse> getAllServices() {
         if (serviceRepository.count() == 0) {
             initDefaultServices();
@@ -120,6 +124,7 @@ public class ServicesServiceImpl implements ServicesService {
     }
 
     @Override
+    @Cacheable(value = "services", key = "'active'")
     public List<ServiceResponse> getActiveServices() {
         if (serviceRepository.count() == 0) {
             initDefaultServices();
@@ -131,6 +136,7 @@ public class ServicesServiceImpl implements ServicesService {
     }
 
     @Override
+    @Cacheable(value = "services", key = "'id-' + #id")
     public ServiceResponse getServiceById(String id) {
         Service service = serviceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Service", "id", id));
@@ -138,6 +144,7 @@ public class ServicesServiceImpl implements ServicesService {
     }
 
     @Override
+    @Cacheable(value = "services", key = "'slug-' + #slug")
     public ServiceResponse getServiceBySlug(String slug) {
         Service service = serviceRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Service", "slug", slug));
@@ -145,6 +152,7 @@ public class ServicesServiceImpl implements ServicesService {
     }
 
     @Override
+    @CacheEvict(value = {"services", "dashboard"}, allEntries = true)
     public ServiceResponse createService(ServiceRequest request) {
         Service service = mapper.toService(request);
 
@@ -157,6 +165,7 @@ public class ServicesServiceImpl implements ServicesService {
     }
 
     @Override
+    @CacheEvict(value = {"services", "dashboard"}, allEntries = true)
     public ServiceResponse updateService(String id, ServiceRequest request) {
         Service existing = serviceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Service", "id", id));
@@ -190,6 +199,7 @@ public class ServicesServiceImpl implements ServicesService {
     }
 
     @Override
+    @CacheEvict(value = {"services", "dashboard"}, allEntries = true)
     public void deleteService(String id) {
         if (!serviceRepository.existsById(id)) {
             throw new ResourceNotFoundException("Service", "id", id);

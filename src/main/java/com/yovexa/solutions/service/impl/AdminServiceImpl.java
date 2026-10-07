@@ -10,6 +10,8 @@ import com.yovexa.solutions.model.Admin;
 import com.yovexa.solutions.repository.AdminRepository;
 import com.yovexa.solutions.service.AdminService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -32,6 +34,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    @CacheEvict(value = "admins", allEntries = true)
     public void changePassword(String email, ChangePasswordRequest request) {
         Admin admin = adminRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new UnauthorizedException("Admin account not found."));
@@ -54,6 +57,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    @Cacheable(value = "admins", key = "'all'")
     public List<AdminResponse> getAllAdmins() {
         return adminRepository.findAll()
                 .stream()
@@ -62,6 +66,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    @Cacheable(value = "admins", key = "#id")
     public AdminResponse getAdminById(String id) {
         Admin admin = adminRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Admin not found with id: " + id));
@@ -69,6 +74,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    @CacheEvict(value = "admins", allEntries = true)
     public AdminResponse createAdmin(CreateAdminRequest request) {
         String email = request.getEmail().trim().toLowerCase();
 
@@ -91,6 +97,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    @CacheEvict(value = "admins", allEntries = true)
     public AdminResponse updateAdmin(String id, UpdateAdminRequest request) {
         Admin admin = adminRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Admin not found with id: " + id));
@@ -124,6 +131,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    @CacheEvict(value = "admins", allEntries = true)
     public void deleteAdmin(String id, String authenticatedAdminEmail) {
         if (adminRepository.count() <= 1) {
             throw new ForbiddenException("The last administrator cannot be deleted.");

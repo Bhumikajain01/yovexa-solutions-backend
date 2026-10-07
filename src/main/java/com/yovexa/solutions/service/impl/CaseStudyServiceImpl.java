@@ -11,6 +11,8 @@ import com.yovexa.solutions.repository.CaseStudyRepository;
 import com.yovexa.solutions.service.CaseStudyService;
 import com.yovexa.solutions.util.SlugUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -35,6 +37,7 @@ public class CaseStudyServiceImpl implements CaseStudyService {
     private final MongoTemplate mongoTemplate;
 
     @Override
+    @Cacheable(value = "caseStudies", key = "'public-' + (#category != null ? #category : 'all') + '-' + (#search != null ? #search : '')")
     public List<CaseStudyResponse> getPublicCaseStudies(String category, String search) {
         List<CaseStudy> list = caseStudyRepository.findByStatusOrderByDisplayOrderAsc("PUBLISHED");
 
@@ -64,6 +67,7 @@ public class CaseStudyServiceImpl implements CaseStudyService {
     }
 
     @Override
+    @Cacheable(value = "caseStudies", key = "'slug-' + #slug")
     public CaseStudyResponse getCaseStudyBySlug(String slug) {
         CaseStudy caseStudy = caseStudyRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("CaseStudy", "slug", slug));
@@ -71,6 +75,7 @@ public class CaseStudyServiceImpl implements CaseStudyService {
     }
 
     @Override
+    @Cacheable(value = "caseStudies", key = "'admin-' + (#search != null ? #search : '') + '-' + (#category != null ? #category : 'all') + '-' + (#status != null ? #status : 'all') + '-' + #page + '-' + #size")
     public PagedResponse<CaseStudyResponse> getAdminCaseStudies(String search, String category, String status, int page,
             int size) {
         Pageable pageable = PageRequest.of(page, size,
@@ -114,6 +119,7 @@ public class CaseStudyServiceImpl implements CaseStudyService {
     }
 
     @Override
+    @Cacheable(value = "caseStudies", key = "'id-' + #id")
     public CaseStudyResponse getCaseStudyById(String id) {
         CaseStudy caseStudy = caseStudyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("CaseStudy", "id", id));
@@ -121,6 +127,7 @@ public class CaseStudyServiceImpl implements CaseStudyService {
     }
 
     @Override
+    @CacheEvict(value = "caseStudies", allEntries = true)
     public CaseStudyResponse createCaseStudy(CaseStudyRequest request) {
         CaseStudy caseStudy = mapper.toCaseStudy(request);
 
@@ -133,6 +140,7 @@ public class CaseStudyServiceImpl implements CaseStudyService {
     }
 
     @Override
+    @CacheEvict(value = "caseStudies", allEntries = true)
     public CaseStudyResponse updateCaseStudy(String id, CaseStudyRequest request) {
         CaseStudy existing = caseStudyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("CaseStudy", "id", id));
@@ -182,6 +190,7 @@ public class CaseStudyServiceImpl implements CaseStudyService {
     }
 
     @Override
+    @CacheEvict(value = "caseStudies", allEntries = true)
     public void deleteCaseStudy(String id) {
         if (!caseStudyRepository.existsById(id)) {
             throw new ResourceNotFoundException("CaseStudy", "id", id);
@@ -190,6 +199,7 @@ public class CaseStudyServiceImpl implements CaseStudyService {
     }
 
     @Override
+    @Cacheable(value = "caseStudies", key = "'categories'")
     public List<Map<String, String>> getCaseStudyCategories() {
         Map<String, String> standard = new LinkedHashMap<>();
         standard.put("all", "All Case Studies");

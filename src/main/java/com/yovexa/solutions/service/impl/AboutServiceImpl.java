@@ -8,6 +8,8 @@ import com.yovexa.solutions.model.AboutSection;
 import com.yovexa.solutions.repository.AboutSectionRepository;
 import com.yovexa.solutions.service.AboutService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,6 +22,7 @@ public class AboutServiceImpl implements AboutService {
     private final EntityMapper mapper;
 
     @Override
+    @Cacheable(value = "about", key = "'all'")
     public List<AboutResponse> getAllAboutSections() {
         return aboutRepository.findAllByOrderByCreatedAtDesc()
                 .stream()
@@ -28,6 +31,7 @@ public class AboutServiceImpl implements AboutService {
     }
 
     @Override
+    @Cacheable(value = "about", key = "#id")
     public AboutResponse getAboutById(String id) {
         AboutSection about = aboutRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("AboutSection", "id", id));
@@ -35,6 +39,7 @@ public class AboutServiceImpl implements AboutService {
     }
 
     @Override
+    @Cacheable(value = "about", key = "'active'", unless = "#result == null")
     public AboutResponse getActiveAbout() {
         return aboutRepository.findFirstByIsActiveTrue()
                 .or(() -> aboutRepository.findFirstByStatusOrderByCreatedAtDesc("PUBLISHED"))
@@ -43,6 +48,7 @@ public class AboutServiceImpl implements AboutService {
     }
 
     @Override
+    @CacheEvict(value = "about", allEntries = true)
     public AboutResponse createAbout(AboutRequest request) {
         AboutSection about = mapper.toAboutSection(request);
 
@@ -55,6 +61,7 @@ public class AboutServiceImpl implements AboutService {
     }
 
     @Override
+    @CacheEvict(value = "about", allEntries = true)
     public AboutResponse updateAbout(String id, AboutRequest request) {
         AboutSection existing = aboutRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("AboutSection", "id", id));
@@ -90,6 +97,7 @@ public class AboutServiceImpl implements AboutService {
     }
 
     @Override
+    @CacheEvict(value = "about", allEntries = true)
     public void deleteAbout(String id) {
         if (!aboutRepository.existsById(id)) {
             throw new ResourceNotFoundException("AboutSection", "id", id);

@@ -11,6 +11,8 @@ import com.yovexa.solutions.repository.ProjectRepository;
 import com.yovexa.solutions.service.ProjectService;
 import com.yovexa.solutions.util.SlugUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -35,6 +37,7 @@ public class ProjectServiceImpl implements ProjectService {
     private final MongoTemplate mongoTemplate;
 
     @Override
+    @Cacheable(value = "projects", key = "'public-' + (#category != null ? #category : 'all') + '-' + (#search != null ? #search : '')")
     public List<ProjectResponse> getPublicProjects(String category, String search) {
         List<Project> list = projectRepository.findByStatusOrderByDisplayOrderAsc("PUBLISHED");
 
@@ -66,6 +69,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @Cacheable(value = "projects", key = "'slug-' + #slug")
     public ProjectResponse getProjectBySlug(String slug) {
         Project project = projectRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Project", "slug", slug));
@@ -73,6 +77,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @Cacheable(value = "projects", key = "'admin-' + (#search != null ? #search : '') + '-' + (#category != null ? #category : 'all') + '-' + (#status != null ? #status : 'all') + '-' + #page + '-' + #size")
     public PagedResponse<ProjectResponse> getAdminProjects(String search, String category, String status, int page,
             int size) {
         Pageable pageable = PageRequest.of(page, size,
@@ -116,6 +121,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @Cacheable(value = "projects", key = "'id-' + #id")
     public ProjectResponse getProjectById(String id) {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Project", "id", id));
@@ -123,6 +129,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @CacheEvict(value = {"projects", "dashboard"}, allEntries = true)
     public ProjectResponse createProject(ProjectRequest request) {
         Project project = mapper.toProject(request);
 
@@ -135,6 +142,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @CacheEvict(value = {"projects", "dashboard"}, allEntries = true)
     public ProjectResponse updateProject(String id, ProjectRequest request) {
         Project existing = projectRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Project", "id", id));
@@ -191,6 +199,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @CacheEvict(value = {"projects", "dashboard"}, allEntries = true)
     public void deleteProject(String id) {
         if (!projectRepository.existsById(id)) {
             throw new ResourceNotFoundException("Project", "id", id);
@@ -199,6 +208,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @Cacheable(value = "projects", key = "'categories'")
     public List<Map<String, String>> getProjectCategories() {
         Map<String, String> standard = new LinkedHashMap<>();
         standard.put("all", "All Projects");

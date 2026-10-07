@@ -5,6 +5,7 @@ import com.yovexa.solutions.mapper.EntityMapper;
 import com.yovexa.solutions.repository.*;
 import com.yovexa.solutions.service.DashboardService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -18,6 +19,7 @@ public class DashboardServiceImpl implements DashboardService {
     private final EntityMapper mapper;
 
     @Override
+    @Cacheable(value = "dashboard", key = "'stats'")
     public DashboardResponse getDashboardStats() {
         long totalProjects = projectRepository.count();
         long publishedProjects = projectRepository.countByStatus("PUBLISHED");

@@ -10,6 +10,7 @@ import com.yovexa.solutions.model.ContactInquiry;
 import com.yovexa.solutions.repository.ContactInquiryRepository;
 import com.yovexa.solutions.service.InquiryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -33,6 +34,7 @@ public class InquiryServiceImpl implements InquiryService {
     private final MongoTemplate mongoTemplate;
 
     @Override
+    @CacheEvict(value = "dashboard", allEntries = true)
     public ContactInquiryResponse submitInquiry(ContactInquiryRequest request) {
         ContactInquiry inquiry = mapper.toContactInquiry(request);
         ContactInquiry saved = inquiryRepository.save(inquiry);
@@ -81,6 +83,7 @@ public class InquiryServiceImpl implements InquiryService {
     }
 
     @Override
+    @CacheEvict(value = "dashboard", allEntries = true)
     public ContactInquiryResponse updateInquiryStatus(String id, InquiryStatusUpdateRequest request) {
         ContactInquiry existing = inquiryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("ContactInquiry", "id", id));
@@ -91,6 +94,7 @@ public class InquiryServiceImpl implements InquiryService {
     }
 
     @Override
+    @CacheEvict(value = "dashboard", allEntries = true)
     public void deleteInquiry(String id) {
         if (!inquiryRepository.existsById(id)) {
             throw new ResourceNotFoundException("ContactInquiry", "id", id);

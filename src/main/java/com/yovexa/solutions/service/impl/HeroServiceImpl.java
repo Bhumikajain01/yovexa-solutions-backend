@@ -8,6 +8,8 @@ import com.yovexa.solutions.model.HeroSection;
 import com.yovexa.solutions.repository.HeroSectionRepository;
 import com.yovexa.solutions.service.HeroService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,6 +22,7 @@ public class HeroServiceImpl implements HeroService {
     private final EntityMapper mapper;
 
     @Override
+    @Cacheable(value = "heroes", key = "'all'")
     public List<HeroResponse> getAllHeroes() {
         return heroRepository.findAllByOrderByCreatedAtDesc()
                 .stream()
@@ -28,6 +31,7 @@ public class HeroServiceImpl implements HeroService {
     }
 
     @Override
+    @Cacheable(value = "heroes", key = "#id")
     public HeroResponse getHeroById(String id) {
         HeroSection hero = heroRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("HeroSection", "id", id));
@@ -35,6 +39,7 @@ public class HeroServiceImpl implements HeroService {
     }
 
     @Override
+    @Cacheable(value = "heroes", key = "'active'", unless = "#result == null")
     public HeroResponse getActiveHero() {
         return heroRepository.findFirstByIsActiveTrue()
                 .or(() -> heroRepository.findFirstByStatusOrderByCreatedAtDesc("PUBLISHED"))
@@ -43,6 +48,7 @@ public class HeroServiceImpl implements HeroService {
     }
 
     @Override
+    @CacheEvict(value = "heroes", allEntries = true)
     public HeroResponse createHero(HeroRequest request) {
         HeroSection hero = mapper.toHeroSection(request);
 
@@ -55,6 +61,7 @@ public class HeroServiceImpl implements HeroService {
     }
 
     @Override
+    @CacheEvict(value = "heroes", allEntries = true)
     public HeroResponse updateHero(String id, HeroRequest request) {
         HeroSection existing = heroRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("HeroSection", "id", id));
@@ -86,6 +93,7 @@ public class HeroServiceImpl implements HeroService {
     }
 
     @Override
+    @CacheEvict(value = "heroes", allEntries = true)
     public void deleteHero(String id) {
         if (!heroRepository.existsById(id)) {
             throw new ResourceNotFoundException("HeroSection", "id", id);
