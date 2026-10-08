@@ -20,28 +20,14 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
     private final SiteSettingsRepository settingsRepository;
     private final EntityMapper mapper;
 
-    public static final java.util.List<String> DEFAULT_BUDGET_OPTIONS = java.util.List.of(
-            "Under ₹25,000",
-            "₹25,000 – ₹50,000",
-            "₹50,000 – ₹1,00,000",
-            "₹1,00,000+",
-            "Not Sure Yet"
-    );
-
     @Override
     @Cacheable(value = "settings", key = "'site_settings'")
     public SiteSettingsResponse getSettings() {
         return settingsRepository.getSettings()
-                .map(settings -> {
-                    if (settings.getBudgetOptions() == null || settings.getBudgetOptions().isEmpty()) {
-                        settings.setBudgetOptions(new java.util.ArrayList<>(DEFAULT_BUDGET_OPTIONS));
-                    }
-                    return mapper.toSiteSettingsResponse(settings);
-                })
+                .map(mapper::toSiteSettingsResponse)
                 .orElseGet(() -> mapper.toSiteSettingsResponse(
                         SiteSettings.builder()
                                 .id("default_settings")
-                                .budgetOptions(new java.util.ArrayList<>(DEFAULT_BUDGET_OPTIONS))
                                 .build()
                 ));
     }

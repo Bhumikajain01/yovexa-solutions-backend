@@ -36,14 +36,7 @@ public class SiteSettings {
     private String instagram;
     private String facebook;
 
-    @Builder.Default
-    private java.util.List<String> budgetOptions = new java.util.ArrayList<>(java.util.List.of(
-            "Under ₹25,000",
-            "₹25,000 – ₹50,000",
-            "₹50,000 – ₹1,00,000",
-            "₹1,00,000+",
-            "Not Sure Yet"
-    ));
+    private java.util.List<String> budgetOptions;
 
     @LastModifiedDate
     private Instant updatedAt;

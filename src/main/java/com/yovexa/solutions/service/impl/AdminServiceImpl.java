@@ -25,6 +25,7 @@ public class AdminServiceImpl implements AdminService {
     private final AdminRepository adminRepository;
     private final EntityMapper mapper;
     private final PasswordEncoder passwordEncoder;
+    private final com.yovexa.solutions.service.RefreshTokenService refreshTokenService;
 
     @Override
     public AdminProfileResponse getProfile(String email) {
@@ -54,6 +55,9 @@ public class AdminServiceImpl implements AdminService {
         admin.setPassword(passwordEncoder.encode(request.getNewPassword()));
         admin.setUpdatedAt(Instant.now());
         adminRepository.save(admin);
+
+        // Security: Revoke all existing refresh token sessions on password change
+        refreshTokenService.revokeAllForAdmin(admin.getId(), "PASSWORD_CHANGED");
     }
 
     @Override
@@ -120,6 +124,9 @@ public class AdminServiceImpl implements AdminService {
                 throw new ForbiddenException("Cannot deactivate the only remaining administrator.");
             }
             admin.setIsActive(request.getIsActive());
+            if (Boolean.FALSE.equals(request.getIsActive())) {
+                refreshTokenService.revokeAllForAdmin(admin.getId(), "ADMIN_DEACTIVATED");
+            }
         }
 
         // Strict: Keep role = ADMIN (prevent arbitrary privilege elevation or alteration)
@@ -140,6 +147,7 @@ public class AdminServiceImpl implements AdminService {
         Admin adminToDelete = adminRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Admin not found with id: " + id));
 
+        refreshTokenService.revokeAllForAdmin(adminToDelete.getId(), "ADMIN_DELETED");
         adminRepository.delete(adminToDelete);
     }
 }

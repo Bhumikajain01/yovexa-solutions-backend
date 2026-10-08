@@ -12,8 +12,6 @@ import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.concurrent.TimeUnit;
-
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "Site Settings", description = "Global Site Contact, Footer & Social Settings APIs")
@@ -30,7 +28,7 @@ public class SiteSettingsController {
     public ResponseEntity<ApiResponse<SiteSettingsResponse>> getSettings() {
         SiteSettingsResponse settings = siteSettingsService.getSettings();
         return ResponseEntity.ok()
-                .cacheControl(CacheControl.maxAge(5, TimeUnit.MINUTES).cachePublic().staleWhileRevalidate(10, TimeUnit.MINUTES))
+                .cacheControl(CacheControl.noCache().mustRevalidate())
                 .body(ApiResponse.success(settings));
     }
 
@@ -43,9 +41,9 @@ public class SiteSettingsController {
         SiteSettingsResponse settings = siteSettingsService.getSettings();
         java.util.List<String> options = settings != null && settings.getBudgetOptions() != null
                 ? settings.getBudgetOptions()
-                : com.yovexa.solutions.service.impl.SiteSettingsServiceImpl.DEFAULT_BUDGET_OPTIONS;
+                : java.util.Collections.emptyList();
         return ResponseEntity.ok()
-                .cacheControl(CacheControl.maxAge(15, TimeUnit.MINUTES).cachePublic().staleWhileRevalidate(30, TimeUnit.MINUTES))
+                .cacheControl(CacheControl.noCache().mustRevalidate())
                 .body(ApiResponse.success(options));
     }
 

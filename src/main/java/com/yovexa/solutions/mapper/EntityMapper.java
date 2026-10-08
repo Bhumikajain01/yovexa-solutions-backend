@@ -417,9 +417,7 @@ public class EntityMapper {
                 .github(settings.getGithub())
                 .instagram(settings.getInstagram())
                 .facebook(settings.getFacebook())
-                .budgetOptions(settings.getBudgetOptions() != null && !settings.getBudgetOptions().isEmpty()
-                        ? settings.getBudgetOptions()
-                        : java.util.List.of("Under ₹25,000", "₹25,000 – ₹50,000", "₹50,000 – ₹1,00,000", "₹1,00,000+", "Not Sure Yet"))
+                .budgetOptions(settings.getBudgetOptions())
                 .updatedAt(settings.getUpdatedAt())
                 .build();
     }

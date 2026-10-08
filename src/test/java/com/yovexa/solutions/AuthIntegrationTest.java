@@ -47,6 +47,9 @@ class AuthIntegrationTest {
     @Mock
     private JwtService jwtService;
 
+    @Mock
+    private com.yovexa.solutions.service.RefreshTokenService refreshTokenService;
+
     private EntityMapper mapper;
     private PasswordEncoder passwordEncoder;
     private AuthService authService;
@@ -57,7 +60,7 @@ class AuthIntegrationTest {
         mapper = new EntityMapper();
         passwordEncoder = new BCryptPasswordEncoder();
         authService = new AuthServiceImpl(adminRepository, authenticationManager, jwtService, mapper, passwordEncoder);
-        adminService = new AdminServiceImpl(adminRepository, mapper, passwordEncoder);
+        adminService = new AdminServiceImpl(adminRepository, mapper, passwordEncoder, refreshTokenService);
     }
 
     @Test

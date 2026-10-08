@@ -126,12 +126,39 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(ex.getMessage()));
     }
 
+    @ExceptionHandler({
+            org.springframework.web.context.request.async.AsyncRequestNotUsableException.class,
+            org.apache.catalina.connector.ClientAbortException.class
+    })
+    public void handleClientAbortException(Exception ex) {
+        log.debug("Client closed or aborted connection before response could be delivered: {}", ex.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Object>> handleGlobalException(
             Exception ex, WebRequest request) {
-        log.error("Unexpected error during authentication", ex);
+        if (isClientAbort(ex)) {
+            log.debug("Client closed connection: {}", ex.getMessage());
+            return null;
+        }
+        log.error("Unhandled server exception: ", ex);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error("An unexpected error occurred. Please try again later."));
+    }
+
+    private boolean isClientAbort(Throwable ex) {
+        Throwable current = ex;
+        while (current != null) {
+            String name = current.getClass().getName();
+            String msg = current.getMessage();
+            if ("org.apache.catalina.connector.ClientAbortException".equals(name)
+                    || "org.springframework.web.context.request.async.AsyncRequestNotUsableException".equals(name)
+                    || (msg != null && (msg.contains("Broken pipe") || msg.contains("connection was aborted")))) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 }

@@ -1,6 +1,7 @@
 package com.yovexa.solutions.config;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
@@ -29,6 +30,8 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.SerializationException;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 import java.time.Duration;
@@ -122,7 +125,8 @@ public class RedisConfig implements CachingConfigurer {
     }
 
     /**
-     * Custom JSON serializer that handles polymorphic types for single DTOs and Collections
+     * Custom JSON serializer that handles polymorphic types for single DTOs and
+     * Collections
      * (including ImmutableCollections returned by Stream.toList() / List.of()).
      */
     public static class RedisJsonSerializer implements RedisSerializer<Object> {
@@ -132,30 +136,31 @@ public class RedisConfig implements CachingConfigurer {
             this.mapper = new ObjectMapper();
             this.mapper.registerModule(new JavaTimeModule());
             this.mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+            this.mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
             this.mapper.activateDefaultTyping(
                     LaissezFaireSubTypeValidator.instance,
                     ObjectMapper.DefaultTyping.NON_FINAL,
-                    JsonTypeInfo.As.WRAPPER_ARRAY
-            );
+                    JsonTypeInfo.As.WRAPPER_ARRAY);
         }
 
         @Override
-        public byte[] serialize(Object source) throws SerializationException {
+        public byte[] serialize(@Nullable Object source) throws SerializationException {
             if (source == null) {
                 return new byte[0];
             }
             try {
+                Object target = source;
                 if (source instanceof Collection<?> col && !(source instanceof ArrayList)) {
-                    source = new ArrayList<>(col);
+                    target = new ArrayList<>(col);
                 }
-                return mapper.writeValueAsBytes(source);
+                return mapper.writeValueAsBytes(target);
             } catch (Exception e) {
                 throw new SerializationException("Could not serialize object: " + e.getMessage(), e);
             }
         }
 
         @Override
-        public Object deserialize(byte[] source) throws SerializationException {
+        public @Nullable Object deserialize(@Nullable byte[] source) throws SerializationException {
             if (source == null || source.length == 0) {
                 return null;
             }
@@ -218,27 +223,30 @@ public class RedisConfig implements CachingConfigurer {
     public CacheErrorHandler errorHandler() {
         return new CacheErrorHandler() {
             @Override
-            public void handleCacheGetError(RuntimeException exception, Cache cache, Object key) {
+            public void handleCacheGetError(@NonNull RuntimeException exception, @NonNull Cache cache,
+                    @NonNull Object key) {
                 log.warn("Redis GET failed for cache='{}', key='{}'. Fallback to DB: {}",
-                        cache != null ? cache.getName() : "null", key, exception.getMessage());
+                        cache.getName(), key, exception.getMessage());
             }
 
             @Override
-            public void handleCachePutError(RuntimeException exception, Cache cache, Object key, Object value) {
-                log.warn("Redis PUT failed for cache='{}', key='{}: {}",
-                        cache != null ? cache.getName() : "null", key, exception.getMessage());
+            public void handleCachePutError(@NonNull RuntimeException exception, @NonNull Cache cache,
+                    @NonNull Object key, @Nullable Object value) {
+                log.warn("Redis PUT failed for cache='{}', key='{}': {}",
+                        cache.getName(), key, exception.getMessage());
             }
 
             @Override
-            public void handleCacheEvictError(RuntimeException exception, Cache cache, Object key) {
-                log.warn("Redis EVICT failed for cache='{}', key='{}: {}",
-                        cache != null ? cache.getName() : "null", key, exception.getMessage());
+            public void handleCacheEvictError(@NonNull RuntimeException exception, @NonNull Cache cache,
+                    @NonNull Object key) {
+                log.warn("Redis EVICT failed for cache='{}', key='{}': {}",
+                        cache.getName(), key, exception.getMessage());
             }
 
             @Override
-            public void handleCacheClearError(RuntimeException exception, Cache cache) {
+            public void handleCacheClearError(@NonNull RuntimeException exception, @NonNull Cache cache) {
                 log.warn("Redis CLEAR failed for cache='{}': {}",
-                        cache != null ? cache.getName() : "null", exception.getMessage());
+                        cache.getName(), exception.getMessage());
             }
         };
     }
