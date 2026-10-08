@@ -67,6 +67,15 @@ public class RedisConfig implements CachingConfigurer {
     @Value("${spring.data.redis.ssl.enabled:false}")
     private boolean sslEnabled;
 
+    @Value("${spring.data.redis.timeout:200ms}")
+    private Duration redisTimeout;
+
+    @Value("${spring.data.redis.connect-timeout:${spring.data.redis.timeout:200ms}}")
+    private Duration connectTimeout;
+
+    @Value("${spring.data.redis.lettuce.shutdown-timeout:100ms}")
+    private Duration shutdownTimeout;
+
     @Bean
     public LettuceConnectionFactory redisConnectionFactory() {
         RedisConfiguration serverConfig;
@@ -85,8 +94,12 @@ public class RedisConfig implements CachingConfigurer {
             serverConfig = standalone;
         }
 
+        Duration effectiveConnectTimeout = connectTimeout != null ? connectTimeout : Duration.ofMillis(200);
+        Duration effectiveCommandTimeout = redisTimeout != null ? redisTimeout : Duration.ofMillis(200);
+        Duration effectiveShutdownTimeout = shutdownTimeout != null ? shutdownTimeout : Duration.ofMillis(100);
+
         SocketOptions socketOptions = SocketOptions.builder()
-                .connectTimeout(Duration.ofMillis(3000))
+                .connectTimeout(effectiveConnectTimeout)
                 .keepAlive(true)
                 .build();
 
@@ -98,7 +111,8 @@ public class RedisConfig implements CachingConfigurer {
 
         LettuceClientConfiguration.LettuceClientConfigurationBuilder builder = LettuceClientConfiguration.builder()
                 .clientOptions(clientOptions)
-                .commandTimeout(Duration.ofMillis(3000));
+                .commandTimeout(effectiveCommandTimeout)
+                .shutdownTimeout(effectiveShutdownTimeout);
 
         if (useSsl) {
             builder.useSsl();
