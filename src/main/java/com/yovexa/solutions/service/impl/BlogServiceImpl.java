@@ -39,12 +39,14 @@ public class BlogServiceImpl implements BlogService {
     private final MongoTemplate mongoTemplate;
 
     @Override
-    @Cacheable(value = "blogs", key = "'public-' + (#search != null ? #search : '') + '-' + (#category != null ? #category : 'all')")
+    @Cacheable(value = "blogs", key = "T(com.yovexa.solutions.util.CacheKeyUtils).publicListKey(#category, #search)")
     public List<BlogResponse> getPublicBlogs(String search, String category) {
+        String normCategory = com.yovexa.solutions.util.CacheKeyUtils.normalizeCategory(category);
+        String normSearch = com.yovexa.solutions.util.CacheKeyUtils.normalizeSearch(search);
+
         List<Blog> list;
-        if (category != null && !category.trim().isEmpty() && !category.equalsIgnoreCase("ALL")) {
-            String norm = category.trim().toUpperCase().replaceAll("[\\s-]+", "_");
-            String catRegex = norm.replace("_", "[ _-]*");
+        if (!"all".equals(normCategory)) {
+            String catRegex = normCategory.replace("_", "[ _-]*");
             Query q = new Query();
             q.addCriteria(Criteria.where("status").is("PUBLISHED"));
             q.addCriteria(Criteria.where("category").regex("(?i)^" + catRegex + "$"));
@@ -54,12 +56,11 @@ public class BlogServiceImpl implements BlogService {
             list = blogRepository.findByStatusOrderByPublishedAtDesc("PUBLISHED");
         }
 
-        if (search != null && !search.trim().isEmpty()) {
-            String q = search.trim().toLowerCase();
+        if (!normSearch.isEmpty()) {
             list = list.stream()
-                    .filter(b -> (b.getTitle() != null && b.getTitle().toLowerCase().contains(q)) ||
-                            (b.getExcerpt() != null && b.getExcerpt().toLowerCase().contains(q)) ||
-                            (b.getContent() != null && b.getContent().toLowerCase().contains(q)))
+                    .filter(b -> (b.getTitle() != null && b.getTitle().toLowerCase().contains(normSearch)) ||
+                            (b.getExcerpt() != null && b.getExcerpt().toLowerCase().contains(normSearch)) ||
+                            (b.getContent() != null && b.getContent().toLowerCase().contains(normSearch)))
                     .toList();
         }
 
@@ -67,7 +68,7 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
-    @Cacheable(value = "blogs", key = "'paged-' + (#search != null ? #search : '') + '-' + (#category != null ? #category : 'all') + '-' + #page + '-' + #size")
+    @Cacheable(value = "blogs", key = "'paged-' + T(com.yovexa.solutions.util.CacheKeyUtils).normalizeSearch(#search) + '-' + T(com.yovexa.solutions.util.CacheKeyUtils).normalizeCategory(#category) + '-' + #page + '-' + #size")
     public PagedResponse<BlogResponse> getPublicBlogsPaged(String search, String category, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("publishedAt").descending());
 
@@ -75,18 +76,19 @@ public class BlogServiceImpl implements BlogService {
         List<Criteria> criteriaList = new ArrayList<>();
         criteriaList.add(Criteria.where("status").is("PUBLISHED"));
 
-        if (search != null && !search.trim().isEmpty()) {
-            String s = search.trim();
+        String normCategory = com.yovexa.solutions.util.CacheKeyUtils.normalizeCategory(category);
+        String normSearch = com.yovexa.solutions.util.CacheKeyUtils.normalizeSearch(search);
+
+        if (!normSearch.isEmpty()) {
             criteriaList.add(new Criteria().orOperator(
-                    Criteria.where("title").regex(s, "i"),
-                    Criteria.where("excerpt").regex(s, "i"),
-                    Criteria.where("content").regex(s, "i")
+                    Criteria.where("title").regex(normSearch, "i"),
+                    Criteria.where("excerpt").regex(normSearch, "i"),
+                    Criteria.where("content").regex(normSearch, "i")
             ));
         }
 
-        if (category != null && !category.trim().isEmpty() && !category.equalsIgnoreCase("ALL")) {
-            String norm = category.trim().toUpperCase().replaceAll("[\\s-]+", "_");
-            String catRegex = norm.replace("_", "[ _-]*");
+        if (!"all".equals(normCategory)) {
+            String catRegex = normCategory.replace("_", "[ _-]*");
             criteriaList.add(Criteria.where("category").regex("(?i)^" + catRegex + "$"));
         }
 
@@ -101,7 +103,7 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
-    @Cacheable(value = "blogs", key = "'slug-' + #slug")
+    @Cacheable(value = "blogs", key = "T(com.yovexa.solutions.util.CacheKeyUtils).slugKey(#slug)")
     public BlogResponse getBlogBySlug(String slug) {
         Blog blog = blogRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Blog", "slug", slug));
@@ -109,7 +111,7 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
-    @Cacheable(value = "blogs", key = "'admin-' + (#search != null ? #search : '') + '-' + (#category != null ? #category : 'all') + '-' + (#status != null ? #status : 'all') + '-' + #page + '-' + #size")
+    @Cacheable(value = "blogs", key = "T(com.yovexa.solutions.util.CacheKeyUtils).adminListKey(#search, #category, #status, #page, #size)")
     public PagedResponse<BlogResponse> getAdminBlogs(String search, String category, String status, int page,
             int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());

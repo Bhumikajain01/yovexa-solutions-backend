@@ -95,6 +95,59 @@ class RedisCacheTest {
     }
 
     @Test
+    void testProjectCaseStudyAndBlogSerialization() {
+        RedisConfig.RedisJsonSerializer serializer = new RedisConfig.RedisJsonSerializer();
+
+        // 1. ProjectResponse list
+        com.yovexa.solutions.dto.project.ProjectResponse proj = com.yovexa.solutions.dto.project.ProjectResponse.builder()
+                .id("proj-1")
+                .name("Test Project")
+                .slug("test-project")
+                .features(List.of("Feature 1"))
+                .technologies(List.of("Tech 1"))
+                .createdAt(Instant.now())
+                .build();
+        byte[] projBytes = serializer.serialize(List.of(proj));
+        Object projDeser = serializer.deserialize(projBytes);
+        assertNotNull(projDeser);
+        assertTrue(projDeser instanceof List);
+
+        // 2. CaseStudyResponse list
+        com.yovexa.solutions.dto.casestudy.CaseStudyResponse cs = com.yovexa.solutions.dto.casestudy.CaseStudyResponse.builder()
+                .id("cs-1")
+                .title("Test CS")
+                .slug("test-cs")
+                .createdAt(Instant.now())
+                .build();
+        byte[] csBytes = serializer.serialize(List.of(cs));
+        Object csDeser = serializer.deserialize(csBytes);
+        assertNotNull(csDeser);
+        assertTrue(csDeser instanceof List);
+
+        // 3. BlogResponse list
+        com.yovexa.solutions.dto.blog.BlogResponse blog = com.yovexa.solutions.dto.blog.BlogResponse.builder()
+                .id("blog-1")
+                .title("Test Blog")
+                .slug("test-blog")
+                .createdAt(Instant.now())
+                .build();
+        byte[] blogBytes = serializer.serialize(List.of(blog));
+        Object blogDeser = serializer.deserialize(blogBytes);
+        assertNotNull(blogDeser);
+        assertTrue(blogDeser instanceof List);
+
+        // 4. Categories list (List<Map<String, String>>)
+        List<java.util.Map<String, String>> categories = List.of(
+                java.util.Map.of("id", "all", "label", "All Projects"),
+                java.util.Map.of("id", "WEB_APPLICATIONS", "label", "Web Applications")
+        );
+        byte[] catBytes = serializer.serialize(categories);
+        Object catDeser = serializer.deserialize(catBytes);
+        assertNotNull(catDeser);
+        assertTrue(catDeser instanceof List);
+    }
+
+    @Test
     void testCachePutAndGetWithList() {
         Cache heroCache = cacheManager.getCache(RedisConfig.HERO_CACHE);
         assertNotNull(heroCache);

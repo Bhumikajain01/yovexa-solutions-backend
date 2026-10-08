@@ -37,29 +37,30 @@ public class CaseStudyServiceImpl implements CaseStudyService {
     private final MongoTemplate mongoTemplate;
 
     @Override
-    @Cacheable(value = "caseStudies", key = "'public-' + (#category != null ? #category : 'all') + '-' + (#search != null ? #search : '')")
+    @Cacheable(value = "caseStudies", key = "T(com.yovexa.solutions.util.CacheKeyUtils).publicListKey(#category, #search)")
     public List<CaseStudyResponse> getPublicCaseStudies(String category, String search) {
         List<CaseStudy> list = caseStudyRepository.findByStatusOrderByDisplayOrderAsc("PUBLISHED");
 
-        if (category != null && !category.trim().isEmpty() && !category.equalsIgnoreCase("ALL")) {
-            String norm = category.trim().toUpperCase().replaceAll("[\\s-]+", "_");
-            String catRegex = norm.replace("_", "[ _-]*");
+        String normCategory = com.yovexa.solutions.util.CacheKeyUtils.normalizeCategory(category);
+        String normSearch = com.yovexa.solutions.util.CacheKeyUtils.normalizeSearch(search);
+
+        if (!"all".equals(normCategory)) {
+            String catRegex = normCategory.replace("_", "[ _-]*");
             list = list.stream()
                     .filter(cs -> {
                         String csCat = cs.getCategory() != null ? cs.getCategory().toUpperCase().replaceAll("[\\s-]+", "_") : "WEB_APPLICATIONS";
-                        return csCat.equals(norm) || csCat.matches("(?i).*" + catRegex + ".*");
+                        return csCat.equals(normCategory) || csCat.matches("(?i).*" + catRegex + ".*");
                     })
                     .toList();
         }
 
-        if (search != null && !search.trim().isEmpty()) {
-            String q = search.trim().toLowerCase();
+        if (!normSearch.isEmpty()) {
             list = list.stream()
-                    .filter(cs -> (cs.getTitle() != null && cs.getTitle().toLowerCase().contains(q)) ||
-                            (cs.getSubtitle() != null && cs.getSubtitle().toLowerCase().contains(q)) ||
-                            (cs.getSummary() != null && cs.getSummary().toLowerCase().contains(q)) ||
-                            (cs.getProblem() != null && cs.getProblem().toLowerCase().contains(q)) ||
-                            (cs.getSolution() != null && cs.getSolution().toLowerCase().contains(q)))
+                    .filter(cs -> (cs.getTitle() != null && cs.getTitle().toLowerCase().contains(normSearch)) ||
+                            (cs.getSubtitle() != null && cs.getSubtitle().toLowerCase().contains(normSearch)) ||
+                            (cs.getSummary() != null && cs.getSummary().toLowerCase().contains(normSearch)) ||
+                            (cs.getProblem() != null && cs.getProblem().toLowerCase().contains(normSearch)) ||
+                            (cs.getSolution() != null && cs.getSolution().toLowerCase().contains(normSearch)))
                     .toList();
         }
 
@@ -67,7 +68,7 @@ public class CaseStudyServiceImpl implements CaseStudyService {
     }
 
     @Override
-    @Cacheable(value = "caseStudies", key = "'slug-' + #slug")
+    @Cacheable(value = "caseStudies", key = "T(com.yovexa.solutions.util.CacheKeyUtils).slugKey(#slug)")
     public CaseStudyResponse getCaseStudyBySlug(String slug) {
         CaseStudy caseStudy = caseStudyRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("CaseStudy", "slug", slug));
@@ -75,7 +76,7 @@ public class CaseStudyServiceImpl implements CaseStudyService {
     }
 
     @Override
-    @Cacheable(value = "caseStudies", key = "'admin-' + (#search != null ? #search : '') + '-' + (#category != null ? #category : 'all') + '-' + (#status != null ? #status : 'all') + '-' + #page + '-' + #size")
+    @Cacheable(value = "caseStudies", key = "T(com.yovexa.solutions.util.CacheKeyUtils).adminListKey(#search, #category, #status, #page, #size)")
     public PagedResponse<CaseStudyResponse> getAdminCaseStudies(String search, String category, String status, int page,
             int size) {
         Pageable pageable = PageRequest.of(page, size,

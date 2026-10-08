@@ -37,31 +37,32 @@ public class ProjectServiceImpl implements ProjectService {
     private final MongoTemplate mongoTemplate;
 
     @Override
-    @Cacheable(value = "projects", key = "'public-' + (#category != null ? #category : 'all') + '-' + (#search != null ? #search : '')")
+    @Cacheable(value = "projects", key = "T(com.yovexa.solutions.util.CacheKeyUtils).publicListKey(#category, #search)")
     public List<ProjectResponse> getPublicProjects(String category, String search) {
         List<Project> list = projectRepository.findByStatusOrderByDisplayOrderAsc("PUBLISHED");
 
-        if (category != null && !category.trim().isEmpty() && !category.equalsIgnoreCase("ALL")) {
-            String norm = category.trim().toUpperCase().replaceAll("[\\s-]+", "_");
-            String catRegex = norm.replace("_", "[ _-]*");
+        String normCategory = com.yovexa.solutions.util.CacheKeyUtils.normalizeCategory(category);
+        String normSearch = com.yovexa.solutions.util.CacheKeyUtils.normalizeSearch(search);
+
+        if (!"all".equals(normCategory)) {
+            String catRegex = normCategory.replace("_", "[ _-]*");
             list = list.stream()
                     .filter(p -> {
                         String pCat = p.getCategory() != null ? p.getCategory().toUpperCase().replaceAll("[\\s-]+", "_") : "WEB_APPLICATIONS";
-                        return pCat.equals(norm) || pCat.matches("(?i).*" + catRegex + ".*");
+                        return pCat.equals(normCategory) || pCat.matches("(?i).*" + catRegex + ".*");
                     })
                     .toList();
         }
 
-        if (search != null && !search.trim().isEmpty()) {
-            String q = search.trim().toLowerCase();
+        if (!normSearch.isEmpty()) {
             list = list.stream()
-                    .filter(p -> (p.getName() != null && p.getName().toLowerCase().contains(q)) ||
-                            (p.getTitle() != null && p.getTitle().toLowerCase().contains(q)) ||
-                            (p.getSubtitle() != null && p.getSubtitle().toLowerCase().contains(q)) ||
-                            (p.getClientLabel() != null && p.getClientLabel().toLowerCase().contains(q)) ||
-                            (p.getShortDescription() != null && p.getShortDescription().toLowerCase().contains(q)) ||
-                            (p.getDescription() != null && p.getDescription().toLowerCase().contains(q)) ||
-                            (p.getTechnologies() != null && p.getTechnologies().stream().anyMatch(t -> t != null && t.toLowerCase().contains(q))))
+                    .filter(p -> (p.getName() != null && p.getName().toLowerCase().contains(normSearch)) ||
+                            (p.getTitle() != null && p.getTitle().toLowerCase().contains(normSearch)) ||
+                            (p.getSubtitle() != null && p.getSubtitle().toLowerCase().contains(normSearch)) ||
+                            (p.getClientLabel() != null && p.getClientLabel().toLowerCase().contains(normSearch)) ||
+                            (p.getShortDescription() != null && p.getShortDescription().toLowerCase().contains(normSearch)) ||
+                            (p.getDescription() != null && p.getDescription().toLowerCase().contains(normSearch)) ||
+                            (p.getTechnologies() != null && p.getTechnologies().stream().anyMatch(t -> t != null && t.toLowerCase().contains(normSearch))))
                     .toList();
         }
 
@@ -69,7 +70,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    @Cacheable(value = "projects", key = "'slug-' + #slug")
+    @Cacheable(value = "projects", key = "T(com.yovexa.solutions.util.CacheKeyUtils).slugKey(#slug)")
     public ProjectResponse getProjectBySlug(String slug) {
         Project project = projectRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Project", "slug", slug));
@@ -77,7 +78,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    @Cacheable(value = "projects", key = "'admin-' + (#search != null ? #search : '') + '-' + (#category != null ? #category : 'all') + '-' + (#status != null ? #status : 'all') + '-' + #page + '-' + #size")
+    @Cacheable(value = "projects", key = "T(com.yovexa.solutions.util.CacheKeyUtils).adminListKey(#search, #category, #status, #page, #size)")
     public PagedResponse<ProjectResponse> getAdminProjects(String search, String category, String status, int page,
             int size) {
         Pageable pageable = PageRequest.of(page, size,
