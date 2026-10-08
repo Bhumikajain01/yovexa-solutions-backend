@@ -29,7 +29,7 @@ public class OpenApiConfig {
                                 .servers(List.of(
                                                 new Server().url("/")
                                                                 .description("Current Server (Production / Local)"),
-                                                new Server().url("https://yovexa-solutions-backend.vercel.app:"
+                                                new Server().url("https://yovexa-solutions-backend1.vercel.app/:"
                                                                 + serverPort).description("Local Development Server")))
                                 .components(new Components()
                                                 .addSecuritySchemes(securitySchemeName,

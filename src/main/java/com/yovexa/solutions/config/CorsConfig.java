@@ -21,13 +21,13 @@ import java.util.Set;
 @Configuration
 public class CorsConfig implements WebMvcConfigurer {
 
-        @Value("${frontend.allowed-origins:https://yovexa-solutions.vercel.app,https://yovexa-solutions-backend.vercel.app}")
+        @Value("${frontend.allowed-origins:https://yovexa-solutions.vercel.app,https://yovexa-solutions-backend1.vercel.app/}")
         private String allowedOrigins;
 
         private List<String> getAllowedOriginsList() {
                 Set<String> origins = new LinkedHashSet<>(Arrays.asList(
                                 "https://yovexa-solutions.vercel.app",
-                                "https://yovexa-solutions-backend.vercel.app",
+                                "https://yovexa-solutions-backend1.vercel.app/",
                                 "http://localhost:5173",
                                 "http://localhost:5174",
                                 "http://localhost:8080",
