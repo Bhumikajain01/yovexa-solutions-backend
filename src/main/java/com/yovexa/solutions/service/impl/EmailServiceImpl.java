@@ -58,7 +58,10 @@ public class EmailServiceImpl implements EmailService {
             return;
         }
 
-        String subject = "New Website Inquiry: " + inquiry.getFullName();
+        String safeName = inquiry.getFullName() != null
+                ? com.yovexa.solutions.util.MongoSecurityUtils.sanitizeHeader(inquiry.getFullName())
+                : "Website Visitor";
+        String subject = "New Website Inquiry: " + safeName;
         String body = String.format(
                 "You have received a new contact inquiry on Yovexa Solutions:\n\n" +
                 "Name: %s\n" +

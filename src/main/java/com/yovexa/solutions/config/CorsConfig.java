@@ -21,13 +21,27 @@ import java.util.Set;
 @Configuration
 public class CorsConfig implements WebMvcConfigurer {
 
-        @Value("${frontend.allowed-origins:https://yovexa-solutions1.vercel.app/,https://yovexa-solutions-backend1.vercel.app/}")
+        @Value("${frontend.allowed-origins:https://yovexa-solutions1.vercel.app,https://yovexa-solutions-backend1.vercel.app}")
         private String allowedOrigins;
+
+        private static final List<String> ALLOWED_METHODS = Arrays.asList(
+                "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"
+        );
+
+        private static final List<String> ALLOWED_HEADERS = Arrays.asList(
+                "Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With",
+                "Access-Control-Request-Method", "Access-Control-Request-Headers"
+        );
+
+        private static final List<String> EXPOSED_HEADERS = Arrays.asList(
+                "Access-Control-Allow-Origin", "Access-Control-Allow-Credentials",
+                "Authorization", "Set-Cookie"
+        );
 
         private List<String> getAllowedOriginsList() {
                 Set<String> origins = new LinkedHashSet<>(Arrays.asList(
-                                "https://yovexa-solutions1.vercel.app/",
-                                "https://yovexa-solutions-backend1.vercel.app/",
+                                "https://yovexa-solutions1.vercel.app",
+                                "https://yovexa-solutions-backend1.vercel.app",
                                 "http://localhost:5173",
                                 "http://localhost:5174",
                                 "http://localhost:8080",
@@ -48,19 +62,15 @@ public class CorsConfig implements WebMvcConfigurer {
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();
                 List<String> origins = getAllowedOriginsList();
-                log.info("Configuring CORS with allowed origins: {}", origins);
+                log.info("Configuring CORS with explicit allowed origins: {}", origins);
 
                 configuration.setAllowedOrigins(origins);
                 configuration.setAllowedOriginPatterns(Arrays.asList(
-                                "https://*.vercel.app",
                                 "http://localhost:*",
                                 "http://127.0.0.1:*"));
-                configuration.setAllowedMethods(
-                                Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"));
-                configuration.setAllowedHeaders(Arrays.asList("*"));
-                configuration.setExposedHeaders(
-                                Arrays.asList("Access-Control-Allow-Origin", "Access-Control-Allow-Credentials",
-                                                "Authorization", "Set-Cookie"));
+                configuration.setAllowedMethods(ALLOWED_METHODS);
+                configuration.setAllowedHeaders(ALLOWED_HEADERS);
+                configuration.setExposedHeaders(EXPOSED_HEADERS);
                 configuration.setAllowCredentials(true);
                 configuration.setMaxAge(3600L);
 
@@ -75,13 +85,11 @@ public class CorsConfig implements WebMvcConfigurer {
                 registry.addMapping("/**")
                                 .allowedOrigins(origins.toArray(new String[0]))
                                 .allowedOriginPatterns(
-                                                "https://*.vercel.app",
                                                 "http://localhost:*",
                                                 "http://127.0.0.1:*")
-                                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD")
-                                .allowedHeaders("*")
-                                .exposedHeaders("Authorization", "Access-Control-Allow-Origin",
-                                                "Access-Control-Allow-Credentials", "Set-Cookie")
+                                .allowedMethods(ALLOWED_METHODS.toArray(new String[0]))
+                                .allowedHeaders(ALLOWED_HEADERS.toArray(new String[0]))
+                                .exposedHeaders(EXPOSED_HEADERS.toArray(new String[0]))
                                 .allowCredentials(true)
                                 .maxAge(3600);
         }

@@ -37,6 +37,16 @@ public class InquiryServiceImpl implements InquiryService {
     @CacheEvict(value = "dashboard", allEntries = true)
     public ContactInquiryResponse submitInquiry(ContactInquiryRequest request) {
         ContactInquiry inquiry = mapper.toContactInquiry(request);
+        inquiry.setFullName(com.yovexa.solutions.util.MongoSecurityUtils.sanitizePlainText(inquiry.getFullName()));
+        if (inquiry.getEmail() != null) {
+            inquiry.setEmail(inquiry.getEmail().trim().toLowerCase());
+        }
+        inquiry.setPhone(com.yovexa.solutions.util.MongoSecurityUtils.sanitizePlainText(inquiry.getPhone()));
+        inquiry.setCompanyName(com.yovexa.solutions.util.MongoSecurityUtils.sanitizePlainText(inquiry.getCompanyName()));
+        inquiry.setService(com.yovexa.solutions.util.MongoSecurityUtils.sanitizePlainText(inquiry.getService()));
+        inquiry.setBudget(com.yovexa.solutions.util.MongoSecurityUtils.sanitizePlainText(inquiry.getBudget()));
+        inquiry.setMessage(com.yovexa.solutions.util.MongoSecurityUtils.sanitizePlainText(inquiry.getMessage()));
+
         ContactInquiry saved = inquiryRepository.save(inquiry);
         emailService.sendInquiryNotification(saved);
         return mapper.toInquiryResponse(saved);
@@ -50,12 +60,12 @@ public class InquiryServiceImpl implements InquiryService {
         List<Criteria> criteriaList = new ArrayList<>();
 
         if (search != null && !search.trim().isEmpty()) {
-            String s = search.trim();
+            String safeSearch = com.yovexa.solutions.util.MongoSecurityUtils.escapeRegex(search.trim());
             criteriaList.add(new Criteria().orOperator(
-                    Criteria.where("fullName").regex(s, "i"),
-                    Criteria.where("email").regex(s, "i"),
-                    Criteria.where("companyName").regex(s, "i"),
-                    Criteria.where("message").regex(s, "i")
+                    Criteria.where("fullName").regex(safeSearch, "i"),
+                    Criteria.where("email").regex(safeSearch, "i"),
+                    Criteria.where("companyName").regex(safeSearch, "i"),
+                    Criteria.where("message").regex(safeSearch, "i")
             ));
         }
 

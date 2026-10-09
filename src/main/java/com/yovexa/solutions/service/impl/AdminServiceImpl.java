@@ -147,6 +147,10 @@ public class AdminServiceImpl implements AdminService {
         Admin adminToDelete = adminRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Admin not found with id: " + id));
 
+        if (authenticatedAdminEmail != null && adminToDelete.getEmail().equalsIgnoreCase(authenticatedAdminEmail.trim())) {
+            throw new ForbiddenException("Administrators cannot delete their own account. Please have another administrator perform this action.");
+        }
+
         refreshTokenService.revokeAllForAdmin(adminToDelete.getId(), "ADMIN_DELETED");
         adminRepository.delete(adminToDelete);
     }

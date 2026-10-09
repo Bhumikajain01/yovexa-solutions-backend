@@ -46,10 +46,11 @@ public class BlogServiceImpl implements BlogService {
 
         List<Blog> list;
         if (!"all".equals(normCategory)) {
-            String catRegex = normCategory.replace("_", "[ _-]*");
+            String safeNormCategory = com.yovexa.solutions.util.MongoSecurityUtils.escapeRegex(normCategory);
+            String publicCatRegex = safeNormCategory.replace("_", "[ _-]*");
             Query q = new Query();
             q.addCriteria(Criteria.where("status").is("PUBLISHED"));
-            q.addCriteria(Criteria.where("category").regex("(?i)^" + catRegex + "$"));
+            q.addCriteria(Criteria.where("category").regex("(?i)^" + publicCatRegex + "$"));
             q.with(Sort.by(Sort.Direction.DESC, "publishedAt"));
             list = mongoTemplate.find(q, Blog.class);
         } else {
@@ -80,16 +81,17 @@ public class BlogServiceImpl implements BlogService {
         String normSearch = com.yovexa.solutions.util.CacheKeyUtils.normalizeSearch(search);
 
         if (!normSearch.isEmpty()) {
+            String safeSearch = com.yovexa.solutions.util.MongoSecurityUtils.escapeRegex(normSearch);
             criteriaList.add(new Criteria().orOperator(
-                    Criteria.where("title").regex(normSearch, "i"),
-                    Criteria.where("excerpt").regex(normSearch, "i"),
-                    Criteria.where("content").regex(normSearch, "i")
+                    Criteria.where("title").regex(safeSearch, "i"),
+                    Criteria.where("excerpt").regex(safeSearch, "i"),
+                    Criteria.where("content").regex(safeSearch, "i")
             ));
         }
 
         if (!"all".equals(normCategory)) {
-            String catRegex = normCategory.replace("_", "[ _-]*");
-            criteriaList.add(Criteria.where("category").regex("(?i)^" + catRegex + "$"));
+            String pagedCatRegex = com.yovexa.solutions.util.MongoSecurityUtils.escapeRegex(normCategory).replace("_", "[ _-]*");
+            criteriaList.add(Criteria.where("category").regex("(?i)^" + pagedCatRegex + "$"));
         }
 
         query.addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[0])));
@@ -120,18 +122,18 @@ public class BlogServiceImpl implements BlogService {
         List<Criteria> criteriaList = new ArrayList<>();
 
         if (search != null && !search.trim().isEmpty()) {
-            String s = search.trim();
+            String safeSearch = com.yovexa.solutions.util.MongoSecurityUtils.escapeRegex(search.trim());
             criteriaList.add(new Criteria().orOperator(
-                    Criteria.where("title").regex(s, "i"),
-                    Criteria.where("excerpt").regex(s, "i"),
-                    Criteria.where("content").regex(s, "i")
+                    Criteria.where("title").regex(safeSearch, "i"),
+                    Criteria.where("excerpt").regex(safeSearch, "i"),
+                    Criteria.where("content").regex(safeSearch, "i")
             ));
         }
 
         if (category != null && !category.trim().isEmpty() && !category.equalsIgnoreCase("ALL")) {
             String norm = category.trim().toUpperCase().replaceAll("[\\s-]+", "_");
-            String catRegex = norm.replace("_", "[ _-]*");
-            criteriaList.add(Criteria.where("category").regex("(?i)^" + catRegex + "$"));
+            String adminCatRegex = com.yovexa.solutions.util.MongoSecurityUtils.escapeRegex(norm).replace("_", "[ _-]*");
+            criteriaList.add(Criteria.where("category").regex("(?i)^" + adminCatRegex + "$"));
         }
 
         if (status != null && !status.trim().isEmpty() && !status.equalsIgnoreCase("ALL")) {

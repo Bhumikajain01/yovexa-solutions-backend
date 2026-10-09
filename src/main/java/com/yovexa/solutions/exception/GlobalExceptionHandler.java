@@ -98,13 +98,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleDataAccessException(
             DataAccessException ex, WebRequest request) {
         log.error("Database connectivity error while processing request: ", ex);
-        String rootMsg = ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : ex.getMessage();
-        if (rootMsg != null) {
-            rootMsg = rootMsg.replaceAll("(?i):[^/@:]+@", ":***@");
-        }
         return ResponseEntity
                 .status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body(ApiResponse.error("Database error: " + rootMsg));
+                .body(ApiResponse.error("Database service is temporarily unavailable. Please try again later."));
     }
 
     @ExceptionHandler(AccessDeniedException.class)

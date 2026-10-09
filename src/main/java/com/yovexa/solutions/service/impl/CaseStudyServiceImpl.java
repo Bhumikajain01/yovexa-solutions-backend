@@ -86,20 +86,21 @@ public class CaseStudyServiceImpl implements CaseStudyService {
         List<Criteria> criteriaList = new ArrayList<>();
 
         if (search != null && !search.trim().isEmpty()) {
-            String s = search.trim();
+            String safeSearch = com.yovexa.solutions.util.MongoSecurityUtils.escapeRegex(search.trim());
             criteriaList.add(new Criteria().orOperator(
-                    Criteria.where("title").regex(s, "i"),
-                    Criteria.where("subtitle").regex(s, "i"),
-                    Criteria.where("clientLabel").regex(s, "i"),
-                    Criteria.where("summary").regex(s, "i"),
-                    Criteria.where("problem").regex(s, "i"),
-                    Criteria.where("solution").regex(s, "i"),
-                    Criteria.where("technologies").regex(s, "i")
+                    Criteria.where("title").regex(safeSearch, "i"),
+                    Criteria.where("subtitle").regex(safeSearch, "i"),
+                    Criteria.where("clientLabel").regex(safeSearch, "i"),
+                    Criteria.where("summary").regex(safeSearch, "i"),
+                    Criteria.where("problem").regex(safeSearch, "i"),
+                    Criteria.where("solution").regex(safeSearch, "i"),
+                    Criteria.where("technologies").regex(safeSearch, "i")
             ));
         }
 
         if (category != null && !category.trim().isEmpty() && !category.equalsIgnoreCase("ALL")) {
-            criteriaList.add(Criteria.where("category").regex(category.trim(), "i"));
+            String safeCategory = com.yovexa.solutions.util.MongoSecurityUtils.escapeRegex(category.trim());
+            criteriaList.add(Criteria.where("category").regex(safeCategory, "i"));
         }
 
         if (status != null && !status.trim().isEmpty() && !status.equalsIgnoreCase("ALL")) {

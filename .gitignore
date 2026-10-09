@@ -33,5 +33,8 @@ build/
 
 ### Environment & Secrets ###
 .env
-.env.local
+.env.*
 *.log
+*.pem
+*.key
+credentials*.json

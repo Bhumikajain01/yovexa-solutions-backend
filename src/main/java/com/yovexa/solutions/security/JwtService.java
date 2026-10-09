@@ -12,17 +12,32 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
+import jakarta.annotation.PostConstruct;
 import java.util.Map;
 import java.util.function.Function;
 
 @Service
 public class JwtService {
 
-    @Value("${jwt.secret:${app.jwt.secret:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}}")
+    @Value("${jwt.secret:${app.jwt.secret:}}")
     private String jwtSecret;
 
     @Value("${jwt.expiration:${app.jwt.expiration-ms:900000}}")
     private long jwtExpirationMs;
+
+    @PostConstruct
+    public void validateSecret() {
+        if (jwtSecret == null || jwtSecret.isBlank()) {
+            byte[] ephemeralKey = new byte[32];
+            new java.security.SecureRandom().nextBytes(ephemeralKey);
+            this.jwtSecret = java.util.HexFormat.of().formatHex(ephemeralKey);
+            org.slf4j.LoggerFactory.getLogger(JwtService.class).warn(
+                "SECURITY WARNING: No JWT_SECRET configured. Generated a temporary random 256-bit key for this session. Configure JWT_SECRET in production!"
+            );
+        } else if (jwtSecret.getBytes(StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalStateException("Security Error: Configured JWT_SECRET is shorter than 256 bits (32 bytes).");
+        }
+    }
 
     public long getExpirationInSeconds() {
         return jwtExpirationMs / 1000;
@@ -30,12 +45,6 @@ public class JwtService {
 
     private SecretKey getSigningKey() {
         byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
-        if (keyBytes.length < 32) {
-            // Pad to at least 256 bits (32 bytes) if secret is short in local test
-            byte[] padded = new byte[32];
-            System.arraycopy(keyBytes, 0, padded, 0, keyBytes.length);
-            keyBytes = padded;
-        }
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
